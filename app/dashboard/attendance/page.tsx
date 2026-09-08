@@ -1,0 +1,1 @@
+export default function Page(){return <main className="main"><h1>Attendance</h1><p className="muted">Daily learner and staff attendance management.</p><section className="card"><h2>Attendance Centre</h2><p>Record, review and report attendance by class, stream and date.</p></section></main>}
