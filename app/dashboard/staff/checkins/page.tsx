@@ -1,3 +1,46 @@
 'use client'
-import{useEffect,useState}from'react';import{createClient}from'../../../../../lib/supabase/client'
-export default function Checkins(){const s=createClient();const[rows,setRows]=useState<any[]>([]);useEffect(()=>{s.from('teacher_checkins').select('id,checkin_at,checkout_at,latitude,longitude,distance_meters,within_geofence,staff:teacher_id(first_name,last_name,employee_number)').order('checkin_at',{ascending:false}).limit(200).then(({data})=>setRows(data||[]))},[]);return <main className="main"><header className="top"><div><h1>Teacher Check-in & Check-out</h1><p className="muted">Super Admin and HR can see teacher arrival, departure and location verification.</p></div></header><section className="card"><div style={{overflowX:'auto'}}><table style={{width:'100%'}}><thead><tr><th>Teacher</th><th>Employee No.</th><th>Check in</th><th>Check out</th><th>Distance</th><th>Location</th></tr></thead><tbody>{rows.map(r=><tr key={r.id}><td>{r.staff?.first_name} {r.staff?.last_name}</td><td>{r.staff?.employee_number||'—'}</td><td>{new Date(r.checkin_at).toLocaleString()}</td><td>{r.checkout_at?new Date(r.checkout_at).toLocaleString():'Still checked in'}</td><td>{r.distance_meters!=null?`${Math.round(r.distance_meters)} m`:'—'}</td><td>{r.within_geofence?'✓ Approved':'—'}</td></tr>)}{!rows.length&&<tr><td colSpan={6} className="muted">No teacher check-ins yet.</td></tr>}</tbody></table></div></section></main>}
+
+import { useEffect, useState } from 'react'
+import { createClient } from '../../../lib/supabase/client'
+
+export default function Checkins() {
+  const s = createClient()
+  const [rows, setRows] = useState<any[]>([])
+
+  useEffect(() => {
+    s.from('teacher_checkins')
+      .select('id,checkin_at,checkout_at,latitude,longitude,distance_meters,within_geofence,staff:teacher_id(first_name,last_name,employee_number)')
+      .order('checkin_at', { ascending: false })
+      .limit(200)
+      .then(({ data }) => setRows(data || []))
+  }, [])
+
+  return (
+    <main className="main">
+      <header className="top">
+        <div>
+          <h1>Teacher Check-in & Check-out</h1>
+          <p className="muted">Super Admin and HR can see teacher arrival, departure and location verification.</p>
+        </div>
+      </header>
+      <section className="card">
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%' }}>
+            <thead><tr><th>Teacher</th><th>Employee No.</th><th>Check in</th><th>Check out</th><th>Distance</th><th>Location</th></tr></thead>
+            <tbody>
+              {rows.map(r => <tr key={r.id}>
+                <td>{r.staff?.first_name} {r.staff?.last_name}</td>
+                <td>{r.staff?.employee_number || '—'}</td>
+                <td>{new Date(r.checkin_at).toLocaleString()}</td>
+                <td>{r.checkout_at ? new Date(r.checkout_at).toLocaleString() : 'Still checked in'}</td>
+                <td>{r.distance_meters != null ? `${Math.round(r.distance_meters)} m` : '—'}</td>
+                <td>{r.within_geofence ? '✓ Approved' : '—'}</td>
+              </tr>)}
+              {!rows.length && <tr><td colSpan={6} className="muted">No teacher check-ins yet.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  )
+}
