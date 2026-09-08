@@ -41,3 +41,12 @@ export async function addStudent(formData:FormData){
  if(p2name&&p2phone){const p2=await getOrCreateParent({name:p2name,phone:p2phone,email:text('parent2_email')||null,occupation:text('parent2_occupation')||null});const {error:e2}=await s.from('student_parents').insert({student_id:student.id,parent_id:p2,relationship:text('parent2_relationship')||'Parent',primary_guardian:false});if(e2)throw new Error(e2.message)}
  revalidatePath('/dashboard/students')
 }
+
+export async function deleteStudent(formData:FormData){
+ const s=await createClient()
+ const studentId=String(formData.get('student_id')||'').trim()
+ if(!studentId)throw new Error('Student ID is required.')
+ const {error}=await s.rpc('delete_student',{p_student_id:studentId})
+ if(error)throw new Error(error.message)
+ revalidatePath('/dashboard/students')
+}
