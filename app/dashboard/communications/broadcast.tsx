@@ -3,22 +3,22 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../../../lib/supabase/client'
 
+type Parent = {
+  id: string
+  name: string
+  phone?: string | null
+  email?: string | null
+}
+
 type Student = {
   id: string
   first_name: string
   last_name: string
   class_id: string | null
   stream_id: string | null
-  classes?: { name?: string } | null
-  streams?: { name?: string } | null
-  student_parents?: Array<{ parent_id: string; parents?: Parent | null }>
-}
-
-type Parent = {
-  id: string
-  name: string
-  phone?: string | null
-  email?: string | null
+  classes?: Array<{ name?: string }> | null
+  streams?: Array<{ name?: string }> | null
+  student_parents?: Array<{ parent_id: string; parents?: Parent[] | null }>
 }
 
 type Recipient = Parent & {
@@ -60,7 +60,7 @@ export default function Broadcast() {
         .order('first_name')
 
       if (error) setStatus(error.message)
-      else setStudents((data as Student[]) || [])
+      else setStudents((data || []) as unknown as Student[])
 
       const { data: settings } = await supabase
         .from('communication_settings')
@@ -77,7 +77,8 @@ export default function Broadcast() {
   const classes = useMemo(() => {
     const map = new Map<string, string>()
     students.forEach((student) => {
-      if (student.class_id && student.classes?.name) map.set(student.class_id, student.classes.name)
+      const className = student.classes?.[0]?.name
+      if (student.class_id && className) map.set(student.class_id, className)
     })
     return Array.from(map.entries())
   }, [students])
@@ -85,7 +86,8 @@ export default function Broadcast() {
   const streams = useMemo(() => {
     const map = new Map<string, string>()
     students.forEach((student) => {
-      if (student.stream_id && student.streams?.name) map.set(student.stream_id, student.streams.name)
+      const streamName = student.streams?.[0]?.name
+      if (student.stream_id && streamName) map.set(student.stream_id, streamName)
     })
     return Array.from(map.entries())
   }, [students])
@@ -96,13 +98,13 @@ export default function Broadcast() {
       .flatMap((student) =>
         (student.student_parents || [])
           .map((link) => {
-            const parent = link.parents
+            const parent = link.parents?.[0]
             if (!parent) return null
             return {
               ...parent,
               student: `${student.first_name} ${student.last_name}`,
-              grade: student.classes?.name || '',
-              stream: student.streams?.name || '',
+              grade: student.classes?.[0]?.name || '',
+              stream: student.streams?.[0]?.name || '',
             }
           })
           .filter((value): value is Recipient => value !== null),
