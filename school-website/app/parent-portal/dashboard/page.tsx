@@ -1,2 +1,74 @@
+'use client';
+
 import Link from 'next/link';
-export default function ParentDashboard(){return <main className="parent-dashboard"><header><Link href="/" className="brand"><img src="/aic-cathedral-logo.svg" alt="AIC Cathedral logo"/><span><b>AIC CATHEDRAL</b><small>PARENT PORTAL</small></span></Link><span className="status">Secure parent account</span></header><section className="welcome"><div><div className="eyebrow">PARENT PORTAL</div><h1>Welcome back.</h1><p>Everything you need to stay connected with your child’s school journey.</p></div><div className="student-pill"><span>Student Portal Code</span><b>AIC-2026-000001</b><small>Sample display — live account data will appear after authentication.</small></div></section><section className="parent-grid">{[['Results','View published exam results and report cards.'],['Attendance','Track attendance and important attendance notices.'],['Fees & Receipts','See balances, payments and available receipts.'],['Announcements','Read school notices and parent communications.'],['Assignments','Stay updated with learning activities and homework.'],['Transport','View your child’s assigned school transport information.']].map(([title,desc])=><article key={title}><div className="icon">◆</div><h2>{title}</h2><p>{desc}</p><span>Open →</span></article>)}</section><footer><Link href="/">AIC Cathedral Primary School</Link><span>Education for Excellence</span></footer></main>}
+import { useEffect, useState } from 'react';
+import { supabase } from '../../../lib/supabase';
+
+type Child = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  admission_number: string;
+  portal_code: string | null;
+  classes?: { name?: string } | null;
+  streams?: { name?: string } | null;
+};
+
+const modules = [
+  ['Results','View published exam results and report cards.'],
+  ['Attendance','Track attendance and important attendance notices.'],
+  ['Fees & Receipts','See balances, payments and available receipts.'],
+  ['Announcements','Read school notices and parent communications.'],
+  ['Assignments','Stay updated with learning activities and homework.'],
+  ['Transport','View your child’s assigned school transport information.'],
+];
+
+export default function ParentDashboard() {
+  const [children, setChildren] = useState<Child[]>([]);
+  const [parentName, setParentName] = useState('Parent');
+  const [message, setMessage] = useState('Loading your account…');
+
+  useEffect(() => {
+    async function load() {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) {
+        window.location.href = '/parent-portal';
+        return;
+      }
+
+      const { data: parent } = await supabase
+        .from('parents')
+        .select('id,name')
+        .eq('profile_id', auth.user.id)
+        .maybeSingle();
+
+      if (!parent) {
+        setMessage('Your parent account is signed in, but it is not yet linked to a school parent record. Contact the school office.');
+        return;
+      }
+
+      setParentName(parent.name);
+      const { data, error } = await supabase
+        .from('student_parents')
+        .select('students(id,first_name,last_name,admission_number,portal_code,classes(name),streams(name))')
+        .eq('parent_id', parent.id);
+
+      if (error) {
+        setMessage(error.message);
+        return;
+      }
+
+      const linked = (data || []).map((row) => row.students).filter(Boolean) as Child[];
+      setChildren(linked);
+      setMessage(linked.length ? '' : 'No learners are currently linked to this parent account.');
+    }
+    void load();
+  }, []);
+
+  async function signOut() {
+    await supabase.auth.signOut();
+    window.location.href = '/parent-portal';
+  }
+
+  return <main className="parent-dashboard"><header><Link href="/" className="brand"><img src="/aic-cathedral-logo.svg" alt="AIC Cathedral logo"/><span><b>AIC CATHEDRAL</b><small>PARENT PORTAL</small></span></Link><div><span className="status">Secure parent account</span><button className="secondary" onClick={signOut}>Sign out</button></div></header><section className="welcome"><div><div className="eyebrow">PARENT PORTAL</div><h1>Welcome, {parentName}.</h1><p>Everything you need to stay connected with your child’s school journey.</p></div><div className="student-pill"><span>Linked learners</span><b>{children.length}</b><small>Live information from the school system</small></div></section>{message&&<div className="notice">{message}</div>}<section className="children"><h2>Your learners</h2><div className="child-list">{children.map((child)=><article key={child.id}><div><strong>{child.first_name} {child.last_name}</strong><span>Admission: {child.admission_number}</span><span>{child.classes?.name || 'Grade not assigned'} · {child.streams?.name || 'Stream not assigned'}</span></div><b>{child.portal_code || 'Portal code pending'}</b></article>)}</div></section><section className="parent-grid">{modules.map(([title,desc])=><article key={title}><div className="icon">◆</div><h2>{title}</h2><p>{desc}</p><span>Open →</span></article>)}</section><footer><Link href="/">AIC Cathedral Primary School</Link><span>Education for Excellence</span></footer></main>;
+}
