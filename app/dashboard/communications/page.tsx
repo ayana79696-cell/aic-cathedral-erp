@@ -1,0 +1,1 @@
+export default function Page(){return <main className="main"><h1>Communications</h1><p className="muted">School announcements and parent communication.</p><section className="card"><h2>Communications Centre</h2><p>Prepare in-app, email and SMS communication workflows.</p></section></main>}
