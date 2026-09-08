@@ -1,4 +1,12 @@
-import { createClient } from '../../lib/supabase/client'
+import { createClient } from '../../lib/supabase/server'
 
-const modules=['Dashboard','Students','Parents / Guardians','Staff & Teachers','Academic Setup','Exams & CBC','Results & Report Forms','Attendance','Finance & Fees','HR & Payroll','Procurement','Inventory','Transport','Communications','Reports','User Management','Audit Logs']
-export default async function Dashboard(){return <div className="dashboard"><aside className="sidebar"><div className="brand"><div className="logo">AIC</div><span className="label"><strong>AIC Cathedral</strong><br/><small>ERP</small></span></div>{modules.map((m,i)=><a className="side-item" href="#" key={m}>{i===0?'⌂':i===1?'♙':'•'} <span className="label">{m}</span></a>)}</aside><main className="main"><header className="top"><div><h1 style={{margin:0}}>Dashboard</h1><p className="muted">AIC Cathedral Primary School</p></div><div className="muted">Production system</div></header><section className="cards"><div className="card"><div className="muted">Students</div><div className="number">—</div></div><div className="card"><div className="muted">Staff</div><div className="number">—</div></div><div className="card"><div className="muted">Active Classes</div><div className="number">—</div></div><div className="card"><div className="muted">Current Term</div><div className="number">—</div></div></section><section className="card" style={{marginTop:16}}><h2>System ready</h2><p className="muted">Connect the school data and configure the current academic year, terms, classes and users. Dashboard figures will be live database values.</p></section></main></div>}
+export default async function Dashboard(){
+ const supabase=await createClient()
+ const [{count:students},{count:staff},{count:classes},{data:term}]=await Promise.all([
+  supabase.from('students').select('*',{count:'exact',head:true}),
+  supabase.from('staff').select('*',{count:'exact',head:true}),
+  supabase.from('classes').select('*',{count:'exact',head:true}),
+  supabase.from('terms').select('name').eq('status','active').maybeSingle()
+ ])
+ return <main className="main"><header className="top"><div><h1 style={{margin:0}}>Dashboard</h1><p className="muted">AIC Cathedral Primary School</p></div><div className="muted">Production system</div></header><section className="cards"><div className="card"><div className="muted">Students</div><div className="number">{students??0}</div></div><div className="card"><div className="muted">Staff</div><div className="number">{staff??0}</div></div><div className="card"><div className="muted">Classes</div><div className="number">{classes??0}</div></div><div className="card"><div className="muted">Current Term</div><div className="number" style={{fontSize:24}}>{term?.name??'Not set'}</div></div></section><section className="card" style={{marginTop:16}}><h2>School ERP</h2><p className="muted">Live figures are loaded from Supabase. Use the navigation to configure the school and manage records.</p></section></main>
+}
