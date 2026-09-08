@@ -1,2 +1,2 @@
-import SimpleCrud from '../_components/simple-crud'
-export default function Page(){return <main className="main"><header className="top"><div><h1>Communications</h1><p className="muted">Publish announcements for the school community.</p></div></header><SimpleCrud table="announcements" title="Announcements" fields={[{name:'title',label:'Title',required:true},{name:'body',label:'Message',required:true},{name:'audience',label:'Audience',options:['all','parents','staff','students']},{name:'published',label:'Published',type:'boolean',options:['true','false']}]} /></main>}
+import Broadcast from './broadcast'
+export default function Page(){return <main className="main"><header className="top"><div><h1>Communications</h1><p className="muted">Send parent broadcasts through WhatsApp now, with SMS, email and API integrations ready.</p></div></header><Broadcast/></main>}
