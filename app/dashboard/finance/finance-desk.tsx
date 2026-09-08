@@ -1,0 +1,43 @@
+'use client'
+
+import {useMemo,useState} from 'react'
+import {createClient} from '../../../lib/supabase/client'
+
+type Student={id:string;admission_number:string;first_name:string;middle_name?:string|null;last_name:string;class_id:string|null;stream_id:string|null;class_name:string;stream_name:string}
+
+type Props={students:Student[];academicYearId?:string|null}
+
+export default function FinanceDesk({students,academicYearId}:Props){
+ const [query,setQuery]=useState(''),[classFilter,setClassFilter]=useState(''),[streamFilter,setStreamFilter]=useState(''),[selected,setSelected]=useState<Student|null>(null)
+ const [due,setDue]=useState(''),[payment,setPayment]=useState(''),[method,setMethod]=useState('mpesa'),[reference,setReference]=useState(''),[message,setMessage]=useState(''),[saving,setSaving]=useState(false)
+ const classes=useMemo(()=>Array.from(new Set(students.map(s=>s.class_name).filter(Boolean))),[students])
+ const filtered=useMemo(()=>students.filter(s=>{
+  const q=query.trim().toLowerCase(); const matchesQ=!q||s.admission_number.toLowerCase().includes(q)||`${s.first_name} ${s.middle_name||''} ${s.last_name}`.toLowerCase().includes(q)
+  return matchesQ&&(!classFilter||s.class_name===classFilter)&&(!streamFilter||s.stream_name===streamFilter)
+ }),[students,query,classFilter,streamFilter])
+ const grouped=useMemo(()=>filtered.reduce<Record<string,Student[]>>((a,s)=>{const key=`${s.class_name} — ${s.stream_name}`;(a[key]??=[]).push(s);return a},{}),[filtered])
+ const choose=(s:Student)=>{setSelected(s);setMessage('');setDue('');setPayment('');setReference('')}
+ const saveAccount=async()=>{if(!selected||!due)return;setSaving(true);setMessage('');const db=createClient();const {error}=await db.from('fee_accounts').insert({student_id:selected.id,academic_year_id:academicYearId||null,amount_due:Number(due),amount_paid:0,status:'unpaid'});setMessage(error?error.message:'Fee account saved successfully.');setSaving(false)}
+ const savePayment=async()=>{if(!selected||!payment)return;setSaving(true);setMessage('');const db=createClient();const {data:account}=await db.from('fee_accounts').select('id').eq('student_id',selected.id).order('created_at',{ascending:false}).limit(1).maybeSingle();const {error}=await db.from('fee_payments').insert({student_id:selected.id,fee_account_id:account?.id||null,amount:Number(payment),payment_method:method,reference_no:reference||null});setMessage(error?error.message:'Payment recorded successfully.');setSaving(false)}
+ return <section className="card" style={{marginBottom:16}}>
+  <div style={{marginBottom:16}}><h2 style={{marginBottom:4}}>Fee collection desk</h2><p className="muted">Search by admission number, choose a grade and East/West stream, then open the learner's fee record.</p></div>
+  <div style={{display:'grid',gridTemplateColumns:'minmax(220px,2fr) repeat(2,minmax(150px,1fr))',gap:10,marginBottom:18}}>
+   <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search admission number or student name"/>
+   <select value={classFilter} onChange={e=>setClassFilter(e.target.value)}><option value="">All grades/classes</option>{classes.map(c=><option key={c}>{c}</option>)}</select>
+   <select value={streamFilter} onChange={e=>setStreamFilter(e.target.value)}><option value="">All streams</option><option value="East">East</option><option value="West">West</option></select>
+  </div>
+  <div style={{display:'grid',gridTemplateColumns:'minmax(260px,1fr) minmax(320px,1.4fr)',gap:16}}>
+   <div style={{maxHeight:360,overflowY:'auto',border:'1px solid #e2e8f0',borderRadius:10,padding:8}}>
+    {Object.keys(grouped).length===0?<p className="muted" style={{padding:15}}>No learners match the search.</p>:Object.entries(grouped).map(([group,list])=><div key={group} style={{marginBottom:10}}><div style={{fontWeight:700,padding:'8px 10px',background:'#f3f6fa',borderRadius:7}}>{group}</div>{list.map(s=><button key={s.id} type="button" onClick={()=>choose(s)} style={{display:'block',width:'100%',textAlign:'left',padding:10,border:0,borderBottom:'1px solid #edf0f4',background:selected?.id===s.id?'#e8f1fb':'transparent',cursor:'pointer'}}><strong>{s.admission_number}</strong> — {s.first_name} {s.last_name}</button>)}</div>)}
+   </div>
+   <div style={{border:'1px solid #e2e8f0',borderRadius:10,padding:16}}>
+    {!selected?<p className="muted">Select a learner to enter fees and payments.</p>:<>
+      <h3 style={{marginTop:0}}>{selected.first_name} {selected.middle_name||''} {selected.last_name}</h3><p className="muted" style={{marginTop:0}}><strong>{selected.admission_number}</strong> · {selected.class_name} · {selected.stream_name}</p>
+      <div style={{borderTop:'1px solid #edf0f4',paddingTop:14,marginTop:12}}><h4>Fee account</h4><div style={{display:'flex',gap:8}}><input type="number" value={due} onChange={e=>setDue(e.target.value)} placeholder="Amount due (KES)"/><button className="btn" type="button" onClick={saveAccount} disabled={saving||!due}>Save fee</button></div></div>
+      <div style={{borderTop:'1px solid #edf0f4',paddingTop:14,marginTop:16}}><h4>Record payment</h4><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}><input type="number" value={payment} onChange={e=>setPayment(e.target.value)} placeholder="Amount paid (KES)"/><select value={method} onChange={e=>setMethod(e.target.value)}><option value="mpesa">M-Pesa</option><option value="cash">Cash</option><option value="bank">Bank</option><option value="card">Card</option><option value="other">Other</option></select><input value={reference} onChange={e=>setReference(e.target.value)} placeholder="Receipt / reference no."/><button className="btn" type="button" onClick={savePayment} disabled={saving||!payment}>Record payment</button></div></div>
+      {message&&<p style={{color:message.includes('successfully')?'#18794e':'#b42318',fontSize:13}}>{message}</p>}
+    </>}
+   </div>
+  </div>
+ </section>
+}
