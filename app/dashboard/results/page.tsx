@@ -1,0 +1,1 @@
+export default function Page(){return <main className="main"><h1>Results & Report Forms</h1><p className="muted">Results, performance summaries and printable report forms.</p><section className="card"><h2>Results Centre</h2><p>Review learner performance, class averages, achievement levels and report forms.</p></section></main>}
