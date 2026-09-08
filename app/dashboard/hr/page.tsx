@@ -1,0 +1,1 @@
+export default function Page(){return <main className="main"><h1>HR & Payroll</h1><p className="muted">Employee records, leave, payroll and HR administration.</p><section className="card"><h2>HR Centre</h2><p>Manage staff employment information and payroll workflows.</p></section></main>}
