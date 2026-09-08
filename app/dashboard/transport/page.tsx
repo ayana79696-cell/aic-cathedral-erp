@@ -1,0 +1,1 @@
+export default function Page(){return <main className="main"><h1>Transport</h1><p className="muted">Routes, vehicles, drivers and learner transport.</p><section className="card"><h2>Transport Centre</h2><p>Manage routes and transport assignments.</p></section></main>}
