@@ -1,0 +1,1 @@
+export default function Page(){return <main className="main"><h1>Inventory</h1><p className="muted">Stores, stock movements, issues and balances.</p><section className="card"><h2>Inventory Centre</h2><p>Track school supplies and stock activity.</p></section></main>}
