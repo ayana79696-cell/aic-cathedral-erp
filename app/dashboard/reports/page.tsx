@@ -1,0 +1,1 @@
+export default function Page(){return <main className="main"><h1>Reports</h1><p className="muted">School-wide operational and academic reporting.</p><section className="card"><h2>Reports Centre</h2><p>Generate academic, attendance, finance, HR and inventory reports.</p></section></main>}
