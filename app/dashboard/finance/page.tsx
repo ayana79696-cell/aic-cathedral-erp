@@ -1,0 +1,1 @@
+export default function Page(){return <main className="main"><h1>Finance & Fees</h1><p className="muted">Fees, payments, balances, receipts and fee holds.</p><section className="card"><h2>Finance Centre</h2><p>Manage learner fee accounts and payment records securely.</p></section></main>}
