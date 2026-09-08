@@ -4,7 +4,7 @@ import {createClient} from '../../../lib/supabase/client'
 type Option=string|{value:string;label:string}
 type Field={name:string;label:string;type?:string;required?:boolean;options?:Option[]}
 type Props={table:string;title:string;fields:Field[];select?:string;order?:string;roleHint?:string}
-export default function SimpleCrud({table,title,fields,select='*',order='created_at',roleHint}:Props){
+export default function SimpleCrud({table,title,fields,select='*',order='id',roleHint}:Props){
  const[rows,setRows]=useState<any[]>([]),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[message,setMessage]=useState(''),[form,setForm]=useState<Record<string,string>>({}),[editing,setEditing]=useState<string|null>(null)
  const load=async()=>{setLoading(true);const{data,error}=await createClient().from(table).select(select).order(order,{ascending:false});if(error)setMessage(error.message);else setRows(data||[]);setLoading(false)}
  useEffect(()=>{load()},[])
