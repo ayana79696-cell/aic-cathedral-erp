@@ -1,0 +1,1 @@
+export default function Page(){return <main className="main"><h1>Staff & Teachers</h1><p className="muted">Staff records, teacher assignments and employment information.</p><section className="card"><h2>Staff Centre</h2><p>Manage staff profiles and teaching assignments.</p></section></main>}
