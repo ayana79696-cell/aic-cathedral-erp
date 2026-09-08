@@ -26,10 +26,10 @@ export async function addStudent(formData:FormData){
 
  async function getOrCreateParent(data:{name:string;phone:string;email:string|null;occupation:string|null;national_id?:string|null}){
   const normalized=normalizePhone(data.phone)
-  const {data:existingParents,error:lookupError}=await s.from('parents').select('id,phone').eq('status','active').limit(5000)
+  if(!normalized)throw new Error('A valid parent phone number is required.')
+  const {data:existing,error:lookupError}=await s.rpc('find_active_parent_by_phone',{p_phone:data.phone})
   if(lookupError)throw new Error(lookupError.message)
-  const existing=existingParents?.find(p=>normalizePhone(p.phone||'')===normalized)
-  if(existing)return existing.id
+  if(existing?.[0]?.id)return existing[0].id
   const {data:created,error:createError}=await s.from('parents').insert({...data,phone:data.phone,status:'active'}).select('id').single()
   if(createError||!created)throw new Error(createError?.message||'Could not create parent record')
   return created.id
