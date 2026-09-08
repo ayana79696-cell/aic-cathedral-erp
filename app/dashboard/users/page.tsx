@@ -1,0 +1,1 @@
+export default function Page(){return <main className="main"><h1>User Management</h1><p className="muted">Accounts, roles and access control.</p><section className="card"><h2>Users & Permissions</h2><p>Manage school users and role-based access. Security is enforced through Supabase policies.</p></section></main>}
