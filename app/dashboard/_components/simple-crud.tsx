@@ -1,0 +1,18 @@
+'use client'
+import {useEffect,useState} from 'react'
+import {createClient} from '../../../lib/supabase/client'
+
+type Field={name:string;label:string;type?:string;required?:boolean;options?:string[]}
+type Props={table:string;title:string;fields:Field[];select?:string;order?:string;roleHint?:string}
+
+export default function SimpleCrud({table,title,fields,select='*',order='created_at',roleHint}:Props){
+ const [rows,setRows]=useState<any[]>([]),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[message,setMessage]=useState(''),[form,setForm]=useState<Record<string,string>>({})
+ const load=async()=>{setLoading(true);const s=createClient();const q=s.from(table).select(select);const {data,error}=await q.order(order,{ascending:false});if(error)setMessage(error.message);else setRows(data||[]);setLoading(false)}
+ useEffect(()=>{load()},[])
+ const save=async(e:React.FormEvent)=>{e.preventDefault();setSaving(true);setMessage('');const payload:any={};fields.forEach(f=>{if(form[f.name]!==undefined&&form[f.name]!=='')payload[f.name]=f.type==='number'?Number(form[f.name]):form[f.name]});const {error}=await createClient().from(table).insert(payload);if(error)setMessage(error.message);else{setForm({});setMessage('Saved successfully.');await load()}setSaving(false)}
+ const remove=async(id:string)=>{if(!confirm('Delete this record?'))return;const {error}=await createClient().from(table).delete().eq('id',id);setMessage(error?.message||'Deleted.');await load()}
+ return <section className="card"><div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'center',marginBottom:16}}><div><h2 style={{margin:0}}>{title}</h2>{roleHint&&<p className="muted" style={{margin:'5px 0 0'}}>{roleHint}</p>}</div><span className="muted">{rows.length} records</span></div>
+ <form onSubmit={save} style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:10,marginBottom:20}}>{fields.map(f=><div key={f.name}><label>{f.label}</label>{f.options?<select value={form[f.name]||''} onChange={e=>setForm({...form,[f.name]:e.target.value})} required={f.required}><option value="">Select…</option>{f.options.map(o=><option key={o}>{o}</option>)}</select>:<input type={f.type||'text'} value={form[f.name]||''} onChange={e=>setForm({...form,[f.name]:e.target.value})} required={f.required} placeholder={f.label}/>}</div>)}<div style={{display:'flex',alignItems:'end'}}><button className="btn" disabled={saving}>{saving?'Saving…':'Add record'}</button></div></form>
+ {message&&<p style={{color:message==='Saved successfully.'?'#18794e':'#b42318',fontSize:13}}>{message}</p>}
+ <div style={{overflowX:'auto'}}><table style={{width:'100%',borderCollapse:'collapse'}}><thead><tr>{fields.map(f=><th key={f.name} style={{textAlign:'left',padding:10}}>{f.label}</th>)}<th style={{padding:10}}>Action</th></tr></thead><tbody>{loading?<tr><td colSpan={fields.length+1} style={{padding:25}}>Loading…</td></tr>:rows.length?rows.map(row=><tr key={row.id}>{fields.map(f=><td key={f.name} style={{padding:10}}>{String(row[f.name]??'—')}</td>)}<td style={{padding:10}}><button type="button" onClick={()=>remove(row.id)} style={{background:'transparent',border:0,color:'#b42318',cursor:'pointer'}}>Delete</button></td></tr>):<tr><td colSpan={fields.length+1} className="muted" style={{padding:30,textAlign:'center'}}>No records yet. Add the first one above.</td></tr>}</tbody></table></div></section>
+}
