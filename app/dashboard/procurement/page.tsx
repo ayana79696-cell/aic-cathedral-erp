@@ -1,0 +1,1 @@
+export default function Page(){return <main className="main"><h1>Procurement</h1><p className="muted">Purchase requests, suppliers and procurement records.</p><section className="card"><h2>Procurement Centre</h2><p>Track purchasing workflows and supplier records.</p></section></main>}
