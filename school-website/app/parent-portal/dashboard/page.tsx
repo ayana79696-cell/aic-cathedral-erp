@@ -58,7 +58,25 @@ export default function ParentDashboard() {
         return;
       }
 
-      const linked = (data || []).map((row) => row.students).filter(Boolean) as Child[];
+      const linked: Child[] = (data ?? []).flatMap((row) => {
+        const raw = row.students;
+        const student = Array.isArray(raw) ? raw[0] : raw;
+        if (!student) return [];
+
+        const classes = Array.isArray(student.classes) ? student.classes[0] ?? null : student.classes ?? null;
+        const streams = Array.isArray(student.streams) ? student.streams[0] ?? null : student.streams ?? null;
+
+        return [{
+          id: student.id,
+          first_name: student.first_name,
+          last_name: student.last_name,
+          admission_number: student.admission_number,
+          portal_code: student.portal_code,
+          classes,
+          streams,
+        }];
+      });
+
       setChildren(linked);
       setMessage(linked.length ? '' : 'No learners are currently linked to this parent account.');
     }
