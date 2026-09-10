@@ -12,7 +12,6 @@ export default function ResultsEntry({role,students,exams,areas,classes,streams,
  const [busy,setBusy]=useState(false); const [msg,setMsg]=useState('')
  const classMap=useMemo(()=>new Map(classes.map(x=>[x.id,x.name])),[classes])
  const streamMap=useMemo(()=>new Map(streams.map(x=>[x.id,x.name])),[streams])
- const areaMap=useMemo(()=>new Map(areas.map(x=>[x.id,x.name])),[areas])
  const assignmentKeys=useMemo(()=>assignments.filter(x=>x.active!==false),[assignments])
  const allowedAreas=useMemo(()=>unrestricted?areas:areas.filter(a=>assignmentKeys.some(x=>x.learning_area_id===a.id)),[unrestricted,areas,assignmentKeys])
  const selectedArea=form.learning_area_id
@@ -31,7 +30,19 @@ export default function ResultsEntry({role,students,exams,areas,classes,streams,
  const selectedStudent=students.find(x=>x.id===form.student_id)
  const allowed=unrestricted||allowedAssignments.some(x=>x.learning_area_id===form.learning_area_id&&x.class_id===selectedStudent?.class_id&&(x.stream_id===null||x.stream_id===selectedStudent?.stream_id)&&x.academic_year_id===selectedExam?.academic_year_id&&(x.term_id===null||x.term_id===selectedExam?.term_id))
  const set=(key:string,value:string)=>setForm(f=>({...f,[key]:value}))
- const save=async(e:React.FormEvent)=>{e.preventDefault();setBusy(true);setMsg('');const max=Number(selectedExam?.max_marks||100);const value=Number(form.marks);if(!form.student_id||!form.exam_id||!form.learning_area_id||!Number.isFinite(value)||value<0||value>max){setMsg(`Enter a mark from 0 to ${max} and select student, exam and learning area.`);setBusy(false);return}if(!allowed){setMsg('This teacher is not assigned to that class, stream, learning area and term.');setBusy(false);return}const existing=marks.find(x=>x.student_id===form.student_id&&x.exam_id===form.exam_id&&x.learning_area_id===form.learning_area_id);const payload={student_id:form.student_id,exam_id:form.exam_id,class_id:selectedStudent.class_id,learning_area_id:form.learning_area_id,teacher_id:(await s.auth.getUser()).data.user?.id,marks:value,max_marks:max,achievement_level:form.achievement_level||null,remarks:form.remarks||null,status:form.status};const result=existing?await s.from('marks').update(payload).eq('id',existing.id):await s.from('marks').insert(payload);if(result.error)setMsg(result.error.message);else{setMsg(existing?'Result updated successfully.':'Result saved successfully.');setForm({...form,marks:'',achievement_level:'',remarks:''})}setBusy(false)}
+ const save=async(e:React.FormEvent)=>{
+  e.preventDefault();setBusy(true);setMsg('')
+  const max=Number(selectedExam?.max_marks||100);const value=Number(form.marks)
+  if(!selectedStudent||!selectedExam||!form.learning_area_id||!Number.isFinite(value)||value<0||value>max){setMsg(`Enter a mark from 0 to ${max} and select learner, exam and learning area.`);setBusy(false);return}
+  if(!allowed){setMsg('This teacher is not assigned to that class, stream, learning area and term.');setBusy(false);return}
+  const existing=marks.find(x=>x.student_id===selectedStudent.id&&x.exam_id===selectedExam.id&&x.learning_area_id===form.learning_area_id)
+  const teacherId=(await s.auth.getUser()).data.user?.id
+  if(!teacherId){setMsg('Your session has expired. Please sign in again.');setBusy(false);return}
+  const payload={student_id:selectedStudent.id,exam_id:selectedExam.id,class_id:selectedStudent.class_id,learning_area_id:form.learning_area_id,teacher_id:teacherId,marks:value,max_marks:max,achievement_level:form.achievement_level||null,remarks:form.remarks||null,status:form.status}
+  const result=existing?await s.from('marks').update(payload).eq('id',existing.id):await s.from('marks').insert(payload)
+  if(result.error)setMsg(result.error.message);else{setMsg(existing?'Result updated successfully.':'Result saved successfully.');setForm({...form,marks:'',achievement_level:'',remarks:''})}
+  setBusy(false)
+ }
  return <section className="card" style={{marginBottom:16}}><h2>Enter learner results</h2><p className="muted">{teacherRole?'Your choices are limited to the classes, streams, learning areas and terms assigned to your teacher account.':'Academic management can enter and update results across the school.'}</p><form onSubmit={save} style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:10,marginTop:14}}>
   <select value={form.learning_area_id} onChange={e=>{set('learning_area_id',e.target.value);set('student_id','');set('exam_id','')}} required><option value="">Learning area</option>{allowedAreas.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select>
   <select value={form.exam_id} onChange={e=>set('exam_id',e.target.value)} required><option value="">Exam</option>{visibleExams.map(x=><option key={x.id} value={x.id}>{x.name} — /{x.max_marks}</option>)}</select>
