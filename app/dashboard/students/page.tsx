@@ -11,7 +11,7 @@ export default async function Students(){
   s.from('streams').select('id,class_id,name').eq('status','active').order('name'),
   s.from('profiles').select('role').eq('id',user?.id||'').maybeSingle()
  ])
- const isAdmin=['super_admin','headteacher','deputy_headteacher'].includes(profile?.role||'')
+ const isAdmin=['super_admin','admin'].includes(profile?.role||'')
  const classMap=new Map((classes||[]).map(c=>[c.id,c.name]))
  const streamMap=new Map((streams||[]).map(x=>[x.id,x.name]))
  const studentName=(x:any)=>[x.first_name,x.middle_name,x.last_name].filter(Boolean).join(' ')
