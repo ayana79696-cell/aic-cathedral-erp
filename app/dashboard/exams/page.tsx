@@ -1,32 +1,15 @@
 'use client'
+import Link from 'next/link'
 import SimpleCrud from '../_components/simple-crud'
 
-export default function Page(){
-  return <main className="main">
-    <header className="top"><div><h1>Exams & CBC</h1><p className="muted">Assessments, CBC learning areas, teacher/class/subject assignments, merit lists, class lists and report forms.</p></div></header>
-    <SimpleCrud table="exams" title="Assessments" fields={[
-      {name:'name',label:'Exam name',required:true},{name:'type',label:'Type',options:['CAT','Mid-term','End-term','Assessment']},
-      {name:'start_date',label:'Start date',type:'date'},{name:'end_date',label:'End date',type:'date'},
-      {name:'max_marks',label:'Maximum marks',type:'number',required:true},{name:'status',label:'Status',options:['active','inactive','archived']}
-    ]} />
-    <SimpleCrud table="learning_areas" title="Learning areas / subjects" fields={[
-      {name:'name',label:'Learning area',required:true},{name:'code',label:'Code'},{name:'category',label:'CBC category'},
-      {name:'active',label:'Active',type:'boolean',options:['true','false']}
-    ]} />
-    <SimpleCrud table="teacher_assignments" title="Teachers, classes, streams & learning areas" fields={[
-      {name:'teacher_id',label:'Teacher ID',required:true},{name:'class_id',label:'Class ID',required:true},{name:'stream_id',label:'Stream ID',required:true},
-      {name:'learning_area_id',label:'Learning area ID',required:true},{name:'academic_year_id',label:'Academic year ID',required:true},{name:'term_id',label:'Term ID',required:true},
-      {name:'active',label:'Active',type:'boolean',options:['true','false']}
-    ]} />
-    <SimpleCrud table="grading_levels" title="CBC grading levels" fields={[
-      {name:'label',label:'Level',required:true},{name:'min_percent',label:'Minimum %',type:'number',required:true},
-      {name:'max_percent',label:'Maximum %',type:'number',required:true},{name:'description',label:'Description'},{name:'sort_order',label:'Order',type:'number'}
-    ]} />
-    <section className="card"><h2>New CBC achievement levels</h2>
-      <div className="cards" style={{gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))'}}>
-        {['Below Expectations','Approaching Expectations','Meeting Expectations','Exceeding Expectations'].map(x=><div className="card" key={x}><strong>{x}</strong></div>)}
-      </div>
-      <p className="muted">Use Results to enter marks. Report Forms generates the official learner report card using these four CBC achievement descriptions.</p>
-    </section>
-  </main>
-}
+const levels=[['EE','Exceeding Expectations','80–100%'],['ME','Meeting Expectations','60–79%'],['AE','Approaching Expectations','40–59%'],['BE','Below Expectations','0–39%']]
+export default function Page(){return <main className="main">
+ <header className="top"><div><div className="eyebrow">ACADEMICS • EXAMINATION MANAGEMENT</div><h1 style={{margin:'5px 0'}}>Exams & CBC</h1><p className="muted">Set up academic periods, assessments, learning areas and CBC grading before teachers enter marks.</p></div><div style={{display:'flex',gap:8,flexWrap:'wrap'}}><Link className="site-btn" href="/dashboard/results">Marks entry</Link><Link className="site-btn secondary" href="/dashboard/reports">Report forms</Link></div></header>
+ <section className="cards"><div className="card"><div className="muted">Academic workflow</div><div style={{fontWeight:800,fontSize:20,marginTop:7}}>Setup → Marks → Results</div></div><div className="card"><div className="muted">CBC model</div><div style={{fontWeight:800,fontSize:20,marginTop:7}}>EE · ME · AE · BE</div></div><div className="card"><div className="muted">Teacher control</div><div style={{fontWeight:800,fontSize:20,marginTop:7}}>Assigned classes & areas</div></div><div className="card"><div className="muted">Output</div><div style={{fontWeight:800,fontSize:20,marginTop:7}}>Printable reports</div></div></section>
+ <section className="card" style={{marginTop:16}}><h2 style={{marginTop:0}}>Examination workflow</h2><div style={{display:'grid',gridTemplateColumns:'repeat(5,minmax(0,1fr))',gap:10}}>{[['1','Academic year / term'],['2','Create assessment'],['3','Assign teacher & area'],['4','Enter and submit marks'],['5','Generate CBC report']].map(([n,t])=><div key={n} style={{padding:15,border:'1px solid #e4e9f1',borderRadius:12,background:'#fbfcfe'}}><strong style={{color:'#0757a6'}}>{n}</strong><div style={{marginTop:7,fontWeight:700}}>{t}</div></div>)}</div></section>
+ <SimpleCrud table="exams" title="Assessments" roleHint="Create CATs, mid-term, end-term and other school assessments." fields={[{name:'name',label:'Exam name',required:true},{name:'type',label:'Type',options:['CAT','Mid-term','End-term','Assessment']},{name:'start_date',label:'Start date',type:'date'},{name:'end_date',label:'End date',type:'date'},{name:'max_marks',label:'Maximum marks',type:'number',required:true},{name:'status',label:'Status',options:['active','inactive','archived']}]} />
+ <SimpleCrud table="learning_areas" title="CBC learning areas" roleHint="Learning areas available to teacher assignment and marks entry." fields={[{name:'name',label:'Learning area',required:true},{name:'code',label:'Code'},{name:'category',label:'CBC category'},{name:'active',label:'Active',type:'boolean',options:['true','false']}]} />
+ <SimpleCrud table="teacher_assignments" title="Teacher assignments" roleHint="Connect a teacher to a class, stream, learning area, academic year and term." fields={[{name:'teacher_id',label:'Teacher ID',required:true},{name:'class_id',label:'Class ID',required:true},{name:'stream_id',label:'Stream ID'},{name:'learning_area_id',label:'Learning area ID',required:true},{name:'academic_year_id',label:'Academic year ID',required:true},{name:'term_id',label:'Term ID'},{name:'active',label:'Active',type:'boolean',options:['true','false']}]} />
+ <section className="card"><h2 style={{marginTop:0}}>CBC achievement scale</h2><div style={{display:'grid',gridTemplateColumns:'repeat(4,minmax(0,1fr))',gap:12}}>{levels.map(([code,name,range])=><div key={code} style={{padding:18,border:'1px solid #e4e9f1',borderRadius:12}}><div style={{fontSize:12,fontWeight:800,color:'#0757a6'}}>{code}</div><strong style={{display:'block',marginTop:6}}>{name}</strong><span className="muted">{range}</span></div>)}</div><p className="muted" style={{marginBottom:0,marginTop:14}}>The real system stores the achievement level with each mark so learner reports and school intelligence update from the same records.</p></section>
+ <SimpleCrud table="grading_levels" title="CBC grading configuration" roleHint="Adjust the school's achievement thresholds when authorized by administration." fields={[{name:'label',label:'Level',required:true},{name:'min_percent',label:'Minimum %',type:'number',required:true},{name:'max_percent',label:'Maximum %',type:'number',required:true},{name:'description',label:'Description'},{name:'sort_order',label:'Order',type:'number'}]} />
+ </main>}
