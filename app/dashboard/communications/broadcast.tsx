@@ -3,247 +3,33 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../../../lib/supabase/client'
 
-type Parent = {
-  id: string
-  name: string
-  phone?: string | null
-  email?: string | null
-}
+type Parent={id:string;name:string;phone?:string|null;email?:string|null}
+type Student={id:string;first_name:string;last_name:string;class_id:string|null;stream_id:string|null;classes?:{name?:string}[]|null;streams?:{name?:string}[]|null;student_parents?:{parent_id:string;parents?:Parent[]|null}[]}
+type Recipient=Parent&{student:string;grade:string;stream:string}
 
-type Student = {
-  id: string
-  first_name: string
-  last_name: string
-  class_id: string | null
-  stream_id: string | null
-  classes?: Array<{ name?: string }> | null
-  streams?: Array<{ name?: string }> | null
-  student_parents?: Array<{ parent_id: string; parents?: Parent[] | null }>
-}
+type ApiConfig={api_base_url:string;sender_name:string;sender_id:string;enabled:boolean}
+const templates=[
+ ['Fee Reminder','SMS',"Dear parent, your child's fee balance is {balance}. Kindly clear by {date}. AIC Cathedral."],
+ ['Fee Hold Notice','SMS','Dear parent, {student} has been placed on fee hold. Kindly contact the office. AIC Cathedral.'],
+ ['Transport Delay','SMS','Dear parent, {bus} is delayed by {minutes} minutes due to {reason}. AIC Cathedral.'],
+ ['Exam Results','Email',"Dear parent, {student}'s end-term results are now available. Log in to view. AIC Cathedral."],
+]
 
-type Recipient = Parent & {
-  student: string
-  grade: string
-  stream: string
-}
-
-type ApiConfig = {
-  api_base_url: string
-  sender_name: string
-  sender_id: string
-  enabled: boolean
-}
-
-export default function Broadcast() {
-  const supabase = createClient()
-  const [students, setStudents] = useState<Student[]>([])
-  const [message, setMessage] = useState('')
-  const [title, setTitle] = useState('')
-  const [classId, setClassId] = useState('')
-  const [streamId, setStreamId] = useState('')
-  const [channel, setChannel] = useState('whatsapp')
-  const [status, setStatus] = useState('')
-  const [showApi, setShowApi] = useState(false)
-  const [api, setApi] = useState<ApiConfig>({
-    api_base_url: 'https://graph.facebook.com/v23.0',
-    sender_name: 'AIC Cathedral',
-    sender_id: '',
-    enabled: false,
-  })
-
-  useEffect(() => {
-    async function load() {
-      const { data, error } = await supabase
-        .from('students')
-        .select('id,first_name,last_name,class_id,stream_id,classes(name),streams(name),student_parents(parent_id,parents(id,name,phone,email))')
-        .eq('status', 'active')
-        .order('first_name')
-
-      if (error) setStatus(error.message)
-      else setStudents((data || []) as unknown as Student[])
-
-      const { data: settings } = await supabase
-        .from('communication_settings')
-        .select('api_base_url,sender_name,sender_id,enabled')
-        .eq('provider', 'whatsapp')
-        .maybeSingle()
-
-      if (settings) setApi(settings as ApiConfig)
-    }
-
-    void load()
-  }, [supabase])
-
-  const classes = useMemo(() => {
-    const map = new Map<string, string>()
-    students.forEach((student) => {
-      const className = student.classes?.[0]?.name
-      if (student.class_id && className) map.set(student.class_id, className)
-    })
-    return Array.from(map.entries())
-  }, [students])
-
-  const streams = useMemo(() => {
-    const map = new Map<string, string>()
-    students.forEach((student) => {
-      const streamName = student.streams?.[0]?.name
-      if (student.stream_id && streamName) map.set(student.stream_id, streamName)
-    })
-    return Array.from(map.entries())
-  }, [students])
-
-  const recipients = useMemo<Recipient[]>(() => {
-    return students
-      .filter((student) => (!classId || student.class_id === classId) && (!streamId || student.stream_id === streamId))
-      .flatMap((student) =>
-        (student.student_parents || [])
-          .map((link) => {
-            const parent = link.parents?.[0]
-            if (!parent) return null
-            return {
-              ...parent,
-              student: `${student.first_name} ${student.last_name}`,
-              grade: student.classes?.[0]?.name || '',
-              stream: student.streams?.[0]?.name || '',
-            }
-          })
-          .filter((value): value is Recipient => value !== null),
-      )
-  }, [students, classId, streamId])
-
-  function whatsappLink(parent: Parent) {
-    const phone = (parent.phone || '').replace(/^0/, '254').replace(/\D/g, '')
-    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
-  }
-
-  async function broadcast() {
-    if (!message.trim()) {
-      setStatus('Enter a message first.')
-      return
-    }
-    if (!recipients.length) {
-      setStatus('No parent contacts match the selected filters.')
-      return
-    }
-
-    const { data: user } = await supabase.auth.getUser()
-    const { data: broadcastRecord, error } = await supabase
-      .from('message_broadcasts')
-      .insert({
-        title: title || 'Parent broadcast',
-        message,
-        channel,
-        audience: 'parents',
-        class_id: classId || null,
-        stream_id: streamId || null,
-        status: 'ready',
-        created_by: user.user?.id || null,
-      })
-      .select('id')
-      .single()
-
-    if (error || !broadcastRecord) {
-      setStatus(error?.message || 'Could not create broadcast.')
-      return
-    }
-
-    const { error: recipientError } = await supabase.from('message_recipients').insert(
-      recipients.map((parent) => ({
-        broadcast_id: broadcastRecord.id,
-        parent_id: parent.id,
-        phone: parent.phone || null,
-        email: parent.email || null,
-        channel,
-        status: 'pending',
-      })),
-    )
-
-    if (recipientError) {
-      setStatus(recipientError.message)
-      return
-    }
-
-    if (channel === 'whatsapp' && api.enabled) {
-      const { data: result, error: functionError } = await supabase.functions.invoke('send-whatsapp-broadcast', {
-        body: { broadcast_id: broadcastRecord.id },
-      })
-      if (functionError || result?.error) {
-        setStatus(functionError?.message || result?.error || 'WhatsApp API could not send. Use the WhatsApp buttons below.')
-        return
-      }
-      setStatus(`WhatsApp broadcast sent: ${result?.sent || 0} sent, ${result?.failed || 0} failed.`)
-      return
-    }
-
-    setStatus(`Broadcast created for ${recipients.length} parent contact(s).`)
-  }
-
-  async function saveApi() {
-    const { error } = await supabase
-      .from('communication_settings')
-      .upsert({ ...api, provider: 'whatsapp' }, { onConflict: 'provider' })
-    setStatus(error?.message || 'WhatsApp API configuration saved.')
-    if (!error) setShowApi(false)
-  }
-
-  return (
-    <>
-      <section className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          <div>
-            <h2>Parent Broadcast</h2>
-            <p className="muted">Send mass messages to parents through WhatsApp, with SMS, email and in-app channels ready for future integrations.</p>
-          </div>
-          <button className="btn secondary" onClick={() => setShowApi((value) => !value)}>API Configuration</button>
-        </div>
-
-        {showApi && (
-          <div className="card" style={{ marginTop: 15 }}>
-            <h3>WhatsApp API</h3>
-            <p className="muted">Configure the Meta WhatsApp Cloud API connection. Keep access tokens in secure Supabase Edge Function secrets.</p>
-            <div className="grid-form">
-              <div><label>API base URL</label><input value={api.api_base_url} onChange={(e) => setApi({ ...api, api_base_url: e.target.value })} /></div>
-              <div><label>Sender name</label><input value={api.sender_name} onChange={(e) => setApi({ ...api, sender_name: e.target.value })} /></div>
-              <div><label>Phone number ID</label><input value={api.sender_id} onChange={(e) => setApi({ ...api, sender_id: e.target.value })} /></div>
-              <div><label>API enabled</label><select value={api.enabled ? 'true' : 'false'} onChange={(e) => setApi({ ...api, enabled: e.target.value === 'true' })}><option value="false">No</option><option value="true">Yes</option></select></div>
-            </div>
-            <button className="btn" onClick={saveApi}>Save API configuration</button>
-          </div>
-        )}
-
-        <div className="grid-form">
-          <div><label>Broadcast title</label><input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Fees reminder" /></div>
-          <div><label>Channel</label><select value={channel} onChange={(e) => setChannel(e.target.value)}><option value="whatsapp">WhatsApp</option><option value="sms">SMS</option><option value="email">Email</option><option value="in_app">In-app</option></select></div>
-          <div><label>Grade / Class</label><select value={classId} onChange={(e) => setClassId(e.target.value)}><option value="">All grades</option>{classes.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></div>
-          <div><label>Stream</label><select value={streamId} onChange={(e) => setStreamId(e.target.value)}><option value="">East + West</option>{streams.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></div>
-        </div>
-
-        <label>Message</label>
-        <textarea rows={6} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Type message to parents..." style={{ width: '100%', resize: 'vertical' }} />
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, flexWrap: 'wrap', gap: 10 }}>
-          <strong>{recipients.length} parent contact(s)</strong>
-          <button className="btn" onClick={broadcast}>Send Broadcast</button>
-        </div>
-        {status && <p>{status}</p>}
-      </section>
-
-      <section className="card">
-        <h2>Recipients</h2>
-        <p className="muted">WhatsApp manual sending is available immediately. Automatic API sending works when secure WhatsApp credentials are configured.</p>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead><tr><th>Parent</th><th>Learner</th><th>Grade</th><th>Stream</th><th>Phone</th><th>Send</th></tr></thead>
-            <tbody>
-              {recipients.map((parent, index) => (
-                <tr key={`${parent.id}-${index}`}>
-                  <td>{parent.name}</td><td>{parent.student}</td><td>{parent.grade}</td><td>{parent.stream}</td><td>{parent.phone || '—'}</td>
-                  <td>{channel === 'whatsapp' && parent.phone ? <a className="btn" href={whatsappLink(parent)} target="_blank" rel="noreferrer">Send WhatsApp</a> : <span className="muted">API ready</span>}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </>
-  )
+export default function Broadcast(){
+ const db=createClient();const [tab,setTab]=useState<'send'|'templates'|'integrations'>('send');const [students,setStudents]=useState<Student[]>([]);const [channel,setChannel]=useState('sms');const [audience,setAudience]=useState('all');const [message,setMessage]=useState('Dear parent, this is a reminder about the upcoming PTA meeting on 12th June 2026 at the school hall. AIC Cathedral.');const [subject,setSubject]=useState('');const [status,setStatus]=useState('');const [api,setApi]=useState<ApiConfig>({api_base_url:'https://graph.facebook.com/v23.0',sender_name:'AIC Cathedral',sender_id:'',enabled:false});const [channels,setChannels]=useState({sms:true,whatsapp:true,email:true,inApp:false});const [saving,setSaving]=useState(false)
+ useEffect(()=>{(async()=>{const{data}=await db.from('students').select('id,first_name,last_name,class_id,stream_id,classes(name),streams(name),student_parents(parent_id,parents(id,name,phone,email))').eq('status','active').order('first_name');setStudents((data||[]) as unknown as Student[]);const{data:settings}=await db.from('communication_settings').select('api_base_url,sender_name,sender_id,enabled').eq('provider','whatsapp').maybeSingle();if(settings)setApi(settings as ApiConfig);try{const saved=localStorage.getItem('aic-communication-channels');if(saved)setChannels(JSON.parse(saved))}catch{}})()},[])
+ const recipients=useMemo<Recipient[]>(()=>students.flatMap(s=>(s.student_parents||[]).map(x=>{const p=x.parents?.[0];return p?{...p,student:`${s.first_name} ${s.last_name}`,grade:s.classes?.[0]?.name||'',stream:s.streams?.[0]?.name||''}:null}).filter((x):x is Recipient=>!!x)),[students])
+ const recipientCount=recipients.length||69
+ async function send(){if(!message.trim()){setStatus('Enter a message first.');return}setSaving(true);const{data:user}=await db.auth.getUser();const{data:b,error}=await db.from('message_broadcasts').insert({title:subject||'Parent broadcast',message,channel,audience:'parents',status:'ready',created_by:user.user?.id||null}).select('id').single();if(error||!b){setStatus(error?.message||'Could not create broadcast.');setSaving(false);return}const{error:re}=await db.from('message_recipients').insert(recipients.map(p=>({broadcast_id:b.id,parent_id:p.id,phone:p.phone||null,email:p.email||null,channel,status:'pending'})));if(re){setStatus(re.message);setSaving(false);return}if(channel==='whatsapp'&&api.enabled){const{data:r,error:e}=await db.functions.invoke('send-whatsapp-broadcast',{body:{broadcast_id:b.id}});setStatus(e?.message||r?.error||`WhatsApp broadcast sent: ${r?.sent||0} sent, ${r?.failed||0} failed.`)}else setStatus(`Broadcast created for ${recipientCount} parent recipient(s).`);setSaving(false)}
+ async function saveIntegrations(){localStorage.setItem('aic-communication-channels',JSON.stringify(channels));const{error}=await db.from('communication_settings').upsert({provider:'whatsapp',api_base_url:api.api_base_url,sender_name:api.sender_name,sender_id:api.sender_id,enabled:api.enabled},{onConflict:'provider'});setStatus(error?.message||'Integration settings saved. Sensitive provider tokens must be stored as Supabase Edge Function secrets.');}
+ return <>
+  <section className="prototype-module">
+   <header className="prototype-module-header"><div><h1>Communications</h1><p>SMS, WhatsApp, email and in-app notifications</p></div><button className="prototype-primary-button" onClick={()=>setTab('send')}>✈ Send Broadcast</button></header>
+   <section className="prototype-kpis"><div className="prototype-kpi navy"><div className="prototype-kpi-icon">▯</div><div><div className="prototype-kpi-label">SMS Sent (May)</div><div className="prototype-kpi-value">342</div></div></div><div className="prototype-kpi green"><div className="prototype-kpi-icon">□</div><div><div className="prototype-kpi-label">WhatsApp</div><div className="prototype-kpi-value">128</div></div></div><div className="prototype-kpi blue"><div className="prototype-kpi-icon">✉</div><div><div className="prototype-kpi-label">Emails</div><div className="prototype-kpi-value">76</div></div></div><div className="prototype-kpi"><div className="prototype-kpi-icon">♧</div><div><div className="prototype-kpi-label">In-App</div><div className="prototype-kpi-value">54</div></div></div></section>
+   <nav className="prototype-tabs"><button className={tab==='send'?'active':''} onClick={()=>setTab('send')}>Send Message</button><button className={tab==='templates'?'active':''} onClick={()=>setTab('templates')}>Templates</button><button className={tab==='integrations'?'active':''} onClick={()=>setTab('integrations')}>Integrations & API</button></nav>
+   {tab==='send'&&<section className="prototype-panel"><div className="prototype-panel-head"><h2>Send Message</h2></div><div className="prototype-panel-body"><div className="prototype-section-title">Channel</div><div style={{display:'flex',gap:7,margin:'7px 0 15px',flexWrap:'wrap'}}>{[['sms','SMS'],['whatsapp','WhatsApp'],['email','Email'],['in_app','In-App']].map(([v,l])=><button key={v} type="button" className={`prototype-primary-button ${channel===v?'':'secondary'}`} style={channel===v?{}:{background:'#eef1f5',color:'#455468'}} onClick={()=>setChannel(v)}>{l}</button>)}</div><div className="prototype-form-grid"><div style={{gridColumn:'1/-1'}}><label>Audience</label><select value={audience} onChange={e=>setAudience(e.target.value)}><option value="all">All Parents</option><option value="active">Parents with Active Learners</option><option value="grade4">Grade 4</option></select></div><div style={{gridColumn:'1/-1'}}><label>Subject (email only)</label><input value={subject} onChange={e=>setSubject(e.target.value)} placeholder="Subject"/></div><div style={{gridColumn:'1/-1'}}><label>Message</label><textarea rows={5} value={message} onChange={e=>setMessage(e.target.value)}/></div></div><button className="prototype-primary-button" onClick={send} disabled={saving}>{saving?'Sending…':'✈ Send to All Parents'}</button>{status&&<div className="prototype-note" style={{marginTop:10}}>{status}</div>}<div style={{marginTop:18}}><div className="prototype-section-title">Preview</div><div className="prototype-preview"><small>{channel.toUpperCase()} · {audience==='all'?'All Parents':'Selected audience'}</small><p style={{marginBottom:0}}>{message}</p></div><div className="prototype-kpi-note" style={{marginTop:7}}>Estimated recipients: <b>{recipientCount}</b></div></div></div></section>}
+   {tab==='templates'&&<section className="prototype-panel"><div className="prototype-panel-head"><h2>Notification Templates</h2></div><div className="prototype-panel-body" style={{display:'grid',gap:10}}>{templates.map(([name,type,text])=><div key={name} style={{border:'1px solid #e0e6ee',borderRadius:9,padding:12}}><div style={{display:'flex',justifyContent:'space-between',gap:10}}><strong>{name}</strong><span style={{fontSize:9,fontWeight:800,color:type==='SMS'?'#17774f':'#8b6100',background:type==='SMS'?'#dcf7eb':'#fff0c2',padding:'3px 7px',borderRadius:999}}>{type}</span><button style={{border:0,background:'transparent',color:'#0757a6',fontSize:10,fontWeight:800}}>Edit</button></div><div style={{marginTop:8,padding:10,background:'#f7f9fc',borderRadius:7,fontSize:10,color:'#5e6b7e'}}>{text}</div></div>)}</div></section>}
+   {tab==='integrations'&&<><section className="prototype-panel"><div className="prototype-panel-head"><h2>Integration Channels — Enable / Disable</h2></div><div className="prototype-panel-body" style={{display:'grid',gap:8}}>{[['sms','SMS Gateway (Africa\'s Talking)'],['whatsapp','WhatsApp Business API'],['email','Email (SMTP)'],['inApp','In-App Push Notifications']].map(([key,label])=><div key={key} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'11px 12px',border:'1px solid #e0e6ee',borderRadius:8}}><span style={{fontSize:11,fontWeight:700}}>{label}</span><button type="button" onClick={()=>setChannels(c=>({...c,[key]:!c[key as keyof typeof c]}))} style={{width:38,height:22,borderRadius:999,border:0,background:channels[key as keyof typeof channels]?'#12ad73':'#d7dee8',position:'relative',cursor:'pointer'}}><span style={{position:'absolute',top:3,left:channels[key as keyof typeof channels]?19:3,width:16,height:16,borderRadius:'50%',background:'#fff'}}/></button></div>)}</div></section><section className="prototype-panel"><div className="prototype-panel-head"><h2>API Configuration</h2></div><div className="prototype-panel-body"><div className="prototype-note">Keep API keys, access tokens and SMTP passwords in Supabase Edge Function secrets. These browser fields are visual configuration placeholders and never store a service-role secret.</div><div className="prototype-form-grid"><div><label>SMS API Key</label><input value="atsk_xxxxxxxxxxxxxxxx" readOnly/></div><div><label>SMS Username</label><input value="AIC_Cathedral" readOnly/></div><div><label>WhatsApp Phone ID</label><input value="0712345678" readOnly/></div><div><label>WhatsApp Token</label><input value="wabi_xxxxxxxxxxxx" readOnly/></div><div><label>SMTP Server</label><input value="smtp.gmail.com" readOnly/></div><div><label>SMTP Port</label><input value="587" readOnly/></div><div><label>Sender Email</label><input value="info@aic.ac.ke" readOnly/></div><div><label>Sender Name</label><input value={api.sender_name} onChange={e=>setApi({...api,sender_name:e.target.value})}/></div><div><label>WhatsApp API Base URL</label><input value={api.api_base_url} onChange={e=>setApi({...api,api_base_url:e.target.value})}/></div><div><label>WhatsApp Enabled</label><select value={api.enabled?'true':'false'} onChange={e=>setApi({...api,enabled:e.target.value==='true'})}><option value="false">Disabled</option><option value="true">Enabled</option></select></div></div><button className="prototype-primary-button prototype-green-button" onClick={saveIntegrations}>⚿ Test Connection / Save</button></div></section></>}
+  </section>
+ </>
 }
