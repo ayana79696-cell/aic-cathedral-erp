@@ -1,0 +1,1 @@
+create unique index if not exists fee_accounts_student_year_term_uq on public.fee_accounts(student_id,coalesce(academic_year_id,'00000000-0000-0000-0000-000000000000'::uuid),coalesce(term_id,'00000000-0000-0000-0000-000000000000'::uuid));
