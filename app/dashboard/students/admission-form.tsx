@@ -1,25 +1,16 @@
 'use client'
 import {useState} from 'react'
 import {addStudent} from './actions'
-
 type ClassOption={id:string;name:string;level:string|null}
-
-export default function AdmissionForm({classes}:{classes:ClassOption[]}){
- const [classId,setClassId]=useState('')
- return <form action={addStudent} style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginTop:16}}>
-  <input name="admission_number" placeholder="Admission No." required/><input name="first_name" placeholder="First name" required/><input name="middle_name" placeholder="Middle name"/><input name="last_name" placeholder="Last name" required/>
-  <select name="gender" required><option value="">Gender</option><option>Male</option><option>Female</option></select><input name="date_of_birth" type="date" aria-label="Date of birth"/>
-  <select name="class_id" value={classId} onChange={e=>setClassId(e.target.value)} required><option value="">Grade / Class</option>{classes.map(c=><option value={c.id} key={c.id}>{c.name}{c.level?` — ${c.level}`:''}</option>)}</select>
-  <select name="stream_name" aria-label="Stream"><option value="">Stream</option><option value="East">East</option><option value="West">West</option></select>
-  <input name="previous_school" placeholder="Previous school"/><input name="birth_certificate_no" placeholder="Birth certificate No."/>
-  <input name="nationality" placeholder="Nationality" defaultValue="Kenyan"/><input name="county" placeholder="County"/><input name="address" placeholder="Home address"/>
-  <select name="blood_group"><option value="">Blood group</option>{['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(x=><option key={x}>{x}</option>)}</select>
-  <input name="medical_conditions" placeholder="Medical information / special needs (if any)"/>
-  <input name="emergency_contact_name" placeholder="Emergency contact name"/><input name="emergency_contact_phone" placeholder="Emergency contact phone"/><input name="emergency_contact_relationship" placeholder="Emergency relationship"/>
-  <div style={{gridColumn:'1/-1',borderTop:'1px solid #e5e7eb',paddingTop:14,marginTop:4}}><h3>Primary parent / guardian</h3></div>
-  <input name="parent_name" placeholder="Parent / guardian full name" required/><input name="parent_phone" placeholder="Parent phone" required/><input name="parent_email" type="email" placeholder="Parent email"/><input name="parent_occupation" placeholder="Occupation"/><input name="parent_id_number" placeholder="National ID / document No."/><input name="parent_relationship" placeholder="Relationship e.g. Mother" defaultValue="Parent" required/>
-  <div style={{gridColumn:'1/-1',borderTop:'1px solid #e5e7eb',paddingTop:14,marginTop:4}}><h3>Second parent / guardian (optional)</h3></div>
-  <input name="parent2_name" placeholder="Second guardian full name"/><input name="parent2_phone" placeholder="Second guardian phone"/><input name="parent2_email" type="email" placeholder="Second guardian email"/><input name="parent2_occupation" placeholder="Occupation"/><input name="parent2_relationship" placeholder="Relationship"/>
-  <div style={{gridColumn:'1/-1'}}><button className="btn">Add complete student record</button></div>
- </form>
-}
+export default function AdmissionForm({classes}:{classes:ClassOption[]}){const [classId,setClassId]=useState('');return <form action={addStudent} style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginTop:16}}>
+<input name="admission_number" placeholder="Admission No." required/><input name="first_name" placeholder="First name" required/><input name="middle_name" placeholder="Middle name"/><input name="last_name" placeholder="Last name" required/>
+<select name="gender" required><option value="">Gender</option><option>Male</option><option>Female</option></select><input name="date_of_birth" type="date" aria-label="Date of birth"/>
+<select name="class_id" value={classId} onChange={e=>setClassId(e.target.value)} required><option value="">Grade / Class</option>{classes.map(c=><option value={c.id} key={c.id}>{c.name}{c.level?` — ${c.level}`:''}</option>)}</select>
+<select name="stream_name" aria-label="Stream"><option value="">Stream</option><option value="East">East</option><option value="West">West</option></select><input name="previous_school" placeholder="Previous school"/><input name="birth_certificate_no" placeholder="Birth certificate No."/>
+<input name="nationality" placeholder="Nationality" defaultValue="Kenyan"/><input name="county" placeholder="County"/><input name="address" placeholder="Home address"/><select name="blood_group"><option value="">Blood group</option>{['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(x=><option key={x}>{x}</option>)}</select><input name="medical_conditions" placeholder="Medical information / special needs (if any)"/>
+<input name="emergency_contact_name" placeholder="Emergency contact name"/><input name="emergency_contact_phone" placeholder="Emergency contact phone"/><input name="emergency_contact_relationship" placeholder="Emergency relationship"/>
+<div style={{gridColumn:'1/-1',borderTop:'1px solid #e5e7eb',paddingTop:14,marginTop:4}}><h3>Primary parent / guardian</h3></div>
+<input name="parent_name" placeholder="Parent / guardian full name" required/><input name="parent_phone" placeholder="Parent phone" required/><input name="parent_email" type="email" placeholder="Parent email"/><input name="parent_occupation" placeholder="Occupation"/><input name="parent_id_number" placeholder="National ID / document No."/><select name="parent_relationship" required><option value="">Relationship</option><option value="Father">Father</option><option value="Mother">Mother</option></select>
+<div style={{gridColumn:'1/-1',borderTop:'1px solid #e5e7eb',paddingTop:14,marginTop:4}}><h3>Second parent / guardian (optional)</h3></div>
+<input name="parent2_name" placeholder="Second guardian full name"/><input name="parent2_phone" placeholder="Second guardian phone"/><input name="parent2_email" type="email" placeholder="Second guardian email"/><input name="parent2_occupation" placeholder="Occupation"/><select name="parent2_relationship"><option value="">Relationship</option><option value="Father">Father</option><option value="Mother">Mother</option></select>
+<div style={{gridColumn:'1/-1'}}><button className="btn">Add complete student record</button></div></form>}
