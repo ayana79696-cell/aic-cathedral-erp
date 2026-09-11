@@ -1,2 +1,2 @@
 import Broadcast from './broadcast'
-export default function Page(){return <main className="main"><header className="top"><div><h1>Communications</h1><p className="muted">Send parent broadcasts through WhatsApp now, with SMS, email and API integrations ready.</p></div></header><Broadcast/></main>}
+export default function Page(){return <main className="main"><Broadcast/></main>}
