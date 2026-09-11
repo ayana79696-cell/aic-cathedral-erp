@@ -3,10 +3,10 @@ import {useEffect,useState,type FormEvent} from 'react'
 import {createClient} from '../../../lib/supabase/client'
 type Option=string|{value:string;label:string}
 type Field={name:string;label:string;type?:string;required?:boolean;options?:Option[]}
-type Props={table:string;title:string;fields:Field[];select?:string;order?:string;roleHint?:string;valueLabels?:Record<string,Record<string,string>>}
-export default function SimpleCrud({table,title,fields,select='*',order='id',roleHint,valueLabels={}}:Props){
+type Props={table:string;title:string;fields:Field[];select?:string;order?:string;roleHint?:string;valueLabels?:Record<string,Record<string,string>>;exclude?:Record<string,string[]>}
+export default function SimpleCrud({table,title,fields,select='*',order='id',roleHint,valueLabels={},exclude={}}:Props){
  const[rows,setRows]=useState<any[]>([]),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[message,setMessage]=useState(''),[form,setForm]=useState<Record<string,string>>({}),[editing,setEditing]=useState<string|null>(null)
- const load=async()=>{setLoading(true);const{data,error}=await createClient().from(table).select(select).order(order,{ascending:false});if(error)setMessage(error.message);else setRows(data||[]);setLoading(false)}
+ const load=async()=>{setLoading(true);const{data,error}=await createClient().from(table).select(select).order(order,{ascending:false});if(error)setMessage(error.message);else setRows((data||[]).filter((row:any)=>Object.entries(exclude).every(([field,values])=>!values.map(String).includes(String(row[field])))));setLoading(false)}
  useEffect(()=>{load()},[])
  const save=async(e:FormEvent)=>{e.preventDefault();setSaving(true);setMessage('');const payload:any={};fields.forEach(f=>{if(form[f.name]!==undefined&&form[f.name]!==''){if(f.type==='number')payload[f.name]=Number(form[f.name]);else if(f.type==='boolean')payload[f.name]=form[f.name]==='true';else payload[f.name]=form[f.name]}});const q=createClient().from(table);const{error}=editing?await q.update(payload).eq('id',editing):await q.insert(payload);if(error)setMessage(error.message);else{setForm({});setEditing(null);setMessage(editing?'Updated successfully.':'Saved successfully.');await load()}setSaving(false)}
  const edit=(row:any)=>{const next:Record<string,string>={};fields.forEach(f=>{const v=row[f.name];if(v!==null&&v!==undefined)next[f.name]=f.type==='boolean'?(v?'true':'false'):String(v)});setForm(next);setEditing(row.id);setMessage('')}
