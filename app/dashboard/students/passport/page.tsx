@@ -20,7 +20,8 @@ export default async function LearnerPassport({searchParams}:{searchParams:Promi
  const stream=streams?.find(x=>x.id===selected.stream_id)?.name||'—'
  const route=routes?.find(x=>x.id===selected.bus_route||x.route_name===selected.bus_route)
  const full=[selected.first_name,selected.middle_name,selected.last_name].filter(Boolean).join(' ')
- const logo=school?.logo_url||'/aic-cathedral-official-logo.svg'
+ // Always use the exact official logo supplied by the school. Do not allow an old/placeholder school_settings logo to override it.
+ const logo='/aic-cathedral-official-logo.svg'
  const schoolName=school?.school_name||'AIC Cathedral Comprehensive School'
  const address=school?.address||'Gilgil, Nakuru County, Kenya'
  const phone=school?.phone||''
