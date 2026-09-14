@@ -5,11 +5,10 @@ import{createClient}from'../../../../lib/supabase/client'
 export default function PassportPrintButton(){
  useEffect(()=>{
   let style:HTMLStyleElement|undefined
-  const fallback='https://res.cloudinary.com/c4bk5bio/image/upload/v1789404523/aic-cathedral/branding/aic-cathedral-official-logo.svg'
   const load=async()=>{
-   let official=fallback
-   try{const sb=createClient();const{data}=await sb.from('school_settings').select('logo_url').maybeSingle();if(data?.logo_url)official=data.logo_url}catch{}
-   const fixLogo=()=>document.querySelectorAll<HTMLImageElement>('img').forEach(img=>{const src=img.getAttribute('src')||'';const alt=(img.getAttribute('alt')||'').toLowerCase();if(src.includes('cloudinary.com')||alt.includes('aic cathedral')||alt.includes('school logo')){if(src!==official)img.src=official;img.style.objectFit='contain';img.style.objectPosition='center';img.style.display='block';img.onerror=()=>{img.src=fallback}}})
+   let official=''
+   try{const sb=createClient();const{data}=await sb.from('school_settings').select('logo_url').maybeSingle();official=data?.logo_url||''}catch{}
+   const fixLogo=()=>document.querySelectorAll<HTMLImageElement>('img').forEach(img=>{const alt=(img.getAttribute('alt')||'').toLowerCase();if(alt.includes('aic cathedral')||alt.includes('school logo')){if(official){img.src=official;img.style.objectFit='contain';img.style.objectPosition='center';img.style.display='block'}else{img.removeAttribute('src');img.style.objectFit='contain';img.style.objectPosition='center';img.style.display='block';img.style.background='#fff';img.style.border='1px dashed #d3a62a'}}})
    fixLogo()
    style=document.createElement('style');style.id='passport-mobile-style';style.textContent=`
    @media(max-width:600px){
