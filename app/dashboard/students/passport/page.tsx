@@ -20,10 +20,10 @@ export default async function LearnerPassport({searchParams}:{searchParams:Promi
  const stream=streams?.find(x=>x.id===selected.stream_id)?.name||'—'
  const route=routes?.find(x=>x.id===selected.bus_route||x.route_name===selected.bus_route)
  const full=[selected.first_name,selected.middle_name,selected.last_name].filter(Boolean).join(' ')
- // Always use the exact official logo supplied by the school. Do not allow an old/placeholder school_settings logo to override it.
- const logo='/aic-cathedral-official-logo.svg'
- const schoolName=school?.school_name||'AIC Cathedral Comprehensive School'
- const address=school?.address||'Gilgil, Nakuru County, Kenya'
+ // Cloudinary-hosted official AIC Cathedral Primary School logo supplied by the school.
+ const logo='https://res.cloudinary.com/c4bk5bio/image/upload/v1789386316/aic-cathedral/branding/aic-cathedral-primary-school-logo.jpg'
+ const schoolName=school?.school_name||'AIC Cathedral Primary School'
+ const address=school?.address||'P.O. Box 37, Gilgil, Nakuru County, Kenya'
  const phone=school?.phone||''
  const Info=({label,value}:{label:string,value:any})=><div className="lp-info"><span>{label}</span><strong>{value||'—'}</strong></div>
  const Mini=({label,value}:{label:string,value:any})=><div className="id-mini"><span>{label}</span><b>{value||'—'}</b></div>
