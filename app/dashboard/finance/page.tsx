@@ -5,9 +5,34 @@ import Cashbook from './cashbook'
 import Invoices from './invoices'
 import StudentFeeStatements from './student-fee-statements'
 import FeeHoldManager from './fee-hold-manager'
-import SimpleCrud from '../_components/simple-crud'
+import FeeAccountRecord from './fee-account-record'
 import {PrototypePage} from '../_components/prototype-workspace'
+
 export default async function Page(){
- const s=await createClient();const [{data:students},{data:accounts},{data:payments}]=await Promise.all([s.from('students').select('id,admission_number,first_name,middle_name,last_name,class_id,stream_id').eq('status','active').order('last_name'),s.from('fee_accounts').select('amount_due,amount_paid,status,student_id'),s.from('fee_payments').select('amount')]);const [{data:classes},{data:streams}]=await Promise.all([s.from('classes').select('id,name').eq('status','active'),s.from('streams').select('id,class_id,name').eq('status','active')]);const cm=new Map((classes||[]).map(c=>[c.id,c.name])),sm=new Map((streams||[]).map(x=>[x.id,x.name]));const fs=(students||[]).map(x=>({...x,class_name:cm.get(x.class_id||'')||'Unassigned',stream_name:sm.get(x.stream_id||'')||'Unassigned'}));const opts=fs.map(x=>({value:x.id,label:`${x.admission_number} — ${x.first_name} ${x.middle_name?`${x.middle_name} `:''}${x.last_name}`}));const learnerLabels=Object.fromEntries(fs.map(x=>[x.id,`${x.first_name} ${x.middle_name?`${x.middle_name} `:''}${x.last_name} (${x.admission_number})`]));const due=(accounts||[]).reduce((a,x)=>a+Number(x.amount_due||0),0),paid=(accounts||[]).reduce((a,x)=>a+Number(x.amount_paid||0),0)||(payments||[]).reduce((a,x)=>a+Number(x.amount||0),0),holds=(accounts||[]).filter(x=>['unpaid','partial'].includes(String(x.status))).length;return <PrototypePage title="Finance & Fees" subtitle="Fees, payments, arrears, invoices, cashbook and receipts" action={<a href="#payment-history" className="prototype-primary-button">+ Record Payment</a>} kpis={[{label:'Total Collected',value:`KES ${paid.toLocaleString('en-KE')}`,note:'Live recorded payments',tone:'navy'},{label:'Total Arrears',value:`KES ${Math.max(due-paid,0).toLocaleString('en-KE')}`,note:'Outstanding balances',tone:'green'},{label:'Fee-Hold Students',value:holds,note:'Linked to transport/teachers',tone:'red'},{label:'Payments Recorded',value:(payments||[]).length,note:'Payment entries',tone:'yellow'}]} tabs={[["#overview","Overview & Fee Structure"],["#payment-history","Payments & Receipts"],["#statements","Student Statements"],["#cashbook","Money In & Out"],["#invoices","Invoices"],["#balances","Balances & Fee Hold"]]}>
- <section id="overview"><FinanceDesk students={fs}/></section><section id="payment-history"><PaymentHistory /></section><section id="statements"><StudentFeeStatements /></section><section id="cashbook"><Cashbook /></section><section id="invoices"><Invoices /></section><section id="balances"><FeeHoldManager students={fs} accounts={accounts||[]}/><SimpleCrud table="fee_accounts" title="Learner fee accounts" roleHint="Use Transport Fee Hold above to block or clear transport boarding. Fee accounts remain the financial record." valueLabels={{student_id:learnerLabels}} fields={[{name:'student_id',label:'Learner',required:true,options:opts},{name:'amount_due',label:'Amount due (KES)',type:'number',required:true},{name:'amount_paid',label:'Amount paid (KES)',type:'number'},{name:'status',label:'Status',options:['unpaid','partial','paid','waived']}]} /></section>
- </PrototypePage>}
+ const s=await createClient()
+ const [{data:students},{data:accounts},{data:payments}]=await Promise.all([
+  s.from('students').select('id,admission_number,first_name,middle_name,last_name,class_id,stream_id').eq('status','active').order('last_name'),
+  s.from('fee_accounts').select('amount_due,amount_paid,status,student_id'),
+  s.from('fee_payments').select('amount')
+ ])
+ const [{data:classes},{data:streams}]=await Promise.all([
+  s.from('classes').select('id,name').eq('status','active'),
+  s.from('streams').select('id,class_id,name').eq('status','active')
+ ])
+ const cm=new Map((classes||[]).map(c=>[c.id,c.name]))
+ const sm=new Map((streams||[]).map(x=>[x.id,x.name]))
+ const fs=(students||[]).map(x=>({...x,class_name:cm.get(x.class_id||'')||'Unassigned',stream_name:sm.get(x.stream_id||'')||'Unassigned'}))
+ const opts=fs.map(x=>({value:x.id,label:`${x.admission_number} — ${x.first_name} ${x.middle_name?`${x.middle_name} `:''}${x.last_name}`}))
+ const learnerLabels=Object.fromEntries(fs.map(x=>[x.id,`${x.first_name} ${x.middle_name?`${x.middle_name} `:''}${x.last_name} (${x.admission_number})`]))
+ const due=(accounts||[]).reduce((a,x)=>a+Number(x.amount_due||0),0)
+ const paid=(accounts||[]).reduce((a,x)=>a+Number(x.amount_paid||0),0)||(payments||[]).reduce((a,x)=>a+Number(x.amount||0),0)
+ const holds=(accounts||[]).filter(x=>['unpaid','partial'].includes(String(x.status))).length
+ return <PrototypePage title="Finance & Fees" subtitle="Fees, payments, arrears, invoices, cashbook and receipts" action={<a href="#payment-history" className="prototype-primary-button">+ Record Payment</a>} kpis={[{label:'Total Collected',value:`KES ${paid.toLocaleString('en-KE')}`,note:'Live recorded payments',tone:'navy'},{label:'Total Arrears',value:`KES ${Math.max(due-paid,0).toLocaleString('en-KE')}`,note:'Outstanding balances',tone:'green'},{label:'Fee-Hold Students',value:holds,note:'Linked to transport/teachers',tone:'red'},{label:'Payments Recorded',value:(payments||[]).length,note:'Payment entries',tone:'yellow'}]} tabs={[["#overview","Overview & Fee Structure"],["#payment-history","Payments & Receipts"],["#statements","Student Statements"],["#cashbook","Money In & Out"],["#invoices","Invoices"],["#balances","Balances & Fee Hold"]]}>
+  <section id="overview"><FinanceDesk students={fs}/><FeeAccountRecord students={fs} accounts={accounts||[]}/></section>
+  <section id="payment-history"><PaymentHistory /></section>
+  <section id="statements"><StudentFeeStatements /></section>
+  <section id="cashbook"><Cashbook /></section>
+  <section id="invoices"><Invoices /></section>
+  <section id="balances"><FeeHoldManager students={fs} accounts={accounts||[]}/></section>
+ </PrototypePage>
+}
