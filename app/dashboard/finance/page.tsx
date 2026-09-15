@@ -6,7 +6,6 @@ import Invoices from './invoices'
 import StudentFeeStatements from './student-fee-statements'
 import FeeHoldManager from './fee-hold-manager'
 import Budget from './budget'
-import PettyCash from './petty-cash'
 import {PrototypePage} from '../_components/prototype-workspace'
 
 export default async function Page(){
@@ -36,9 +35,8 @@ export default async function Page(){
   return 0
  }
  const br=(budgetLines||[]).map(x=>({id:x.id,category:x.category,section:x.section as 'income'|'expenditure',budget:Number(x.budget_amount||0),actual:actualByCategory(x.category),notes:x.notes||null}))
- return <PrototypePage title="Finance & Fees" subtitle="Fees, payments, arrears, petty cash, invoices, cashbook and budget planning" action={<a href="#budget" className="prototype-primary-button">+ Budget</a>} kpis={[{label:'Total Collected',value:`KES ${paid.toLocaleString('en-KE')}`,note:'Live recorded payments',tone:'navy'},{label:'Total Arrears',value:`KES ${Math.max(due-paid,0).toLocaleString('en-KE')}`,note:'Outstanding balances',tone:'green'},{label:'Fee-Hold Students',value:holds,note:'Linked to transport/teachers',tone:'red'},{label:'Payments Recorded',value:(payments||[]).length,note:'Payment entries',tone:'yellow'}]} tabs={[["#overview","Fees & Payments"],["#petty-cash","Petty Cash"],["#budget","Budget & Planning"],["#payment-history","Payments & Receipts"],["#statements","Student Statements"],["#cashbook","Money In & Out"],["#invoices","Invoices"],["#balances","Balances & Fee Hold"]]}>
+ return <PrototypePage title="Finance & Fees" subtitle="Fees, payments, arrears, invoices, cashbook and budget planning" action={<a href="#budget" className="prototype-primary-button">+ Budget</a>} kpis={[{label:'Total Collected',value:`KES ${paid.toLocaleString('en-KE')}`,note:'Live recorded payments',tone:'navy'},{label:'Total Arrears',value:`KES ${Math.max(due-paid,0).toLocaleString('en-KE')}`,note:'Outstanding balances',tone:'green'},{label:'Fee-Hold Students',value:holds,note:'Linked to transport/teachers',tone:'red'},{label:'Payments Recorded',value:(payments||[]).length,note:'Payment entries',tone:'yellow'}]} tabs={[["#overview","Fees & Payments"],["#budget","Budget & Planning"],["#payment-history","Payments & Receipts"],["#statements","Student Statements"],["#cashbook","Money In & Out"],["#invoices","Invoices"],["#balances","Balances & Fee Hold"]]}>
   <section id="overview"><FinanceDesk students={fs}/></section>
-  <section id="petty-cash"><PettyCash/></section>
   <section id="budget"><Budget rows={br}/></section>
   <section id="payment-history"><PaymentHistory /></section>
   <section id="statements"><StudentFeeStatements /></section>
