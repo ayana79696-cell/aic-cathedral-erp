@@ -1,0 +1,1 @@
+export default function Loading(){return <main className="min-h-screen grid place-items-center bg-slate-50"><div className="text-center"><div className="mx-auto mb-3 h-9 w-9 animate-spin rounded-full border-4 border-slate-200 border-t-slate-700"/><p className="text-sm text-slate-600">Loading AIC Cathedral ERP…</p></div></main>}
