@@ -5,7 +5,6 @@ import Cashbook from './cashbook'
 import Invoices from './invoices'
 import StudentFeeStatements from './student-fee-statements'
 import FeeHoldManager from './fee-hold-manager'
-import FeeAccountRecord from './fee-account-record'
 import {PrototypePage} from '../_components/prototype-workspace'
 
 export default async function Page(){
@@ -22,13 +21,11 @@ export default async function Page(){
  const cm=new Map((classes||[]).map(c=>[c.id,c.name]))
  const sm=new Map((streams||[]).map(x=>[x.id,x.name]))
  const fs=(students||[]).map(x=>({...x,class_name:cm.get(x.class_id||'')||'Unassigned',stream_name:sm.get(x.stream_id||'')||'Unassigned'}))
- const opts=fs.map(x=>({value:x.id,label:`${x.admission_number} — ${x.first_name} ${x.middle_name?`${x.middle_name} `:''}${x.last_name}`}))
- const learnerLabels=Object.fromEntries(fs.map(x=>[x.id,`${x.first_name} ${x.middle_name?`${x.middle_name} `:''}${x.last_name} (${x.admission_number})`]))
  const due=(accounts||[]).reduce((a,x)=>a+Number(x.amount_due||0),0)
  const paid=(accounts||[]).reduce((a,x)=>a+Number(x.amount_paid||0),0)||(payments||[]).reduce((a,x)=>a+Number(x.amount||0),0)
  const holds=(accounts||[]).filter(x=>['unpaid','partial'].includes(String(x.status))).length
- return <PrototypePage title="Finance & Fees" subtitle="Fees, payments, arrears, invoices, cashbook and receipts" action={<a href="#payment-history" className="prototype-primary-button">+ Record Payment</a>} kpis={[{label:'Total Collected',value:`KES ${paid.toLocaleString('en-KE')}`,note:'Live recorded payments',tone:'navy'},{label:'Total Arrears',value:`KES ${Math.max(due-paid,0).toLocaleString('en-KE')}`,note:'Outstanding balances',tone:'green'},{label:'Fee-Hold Students',value:holds,note:'Linked to transport/teachers',tone:'red'},{label:'Payments Recorded',value:(payments||[]).length,note:'Payment entries',tone:'yellow'}]} tabs={[["#overview","Overview & Fee Structure"],["#payment-history","Payments & Receipts"],["#statements","Student Statements"],["#cashbook","Money In & Out"],["#invoices","Invoices"],["#balances","Balances & Fee Hold"]]}>
-  <section id="overview"><FinanceDesk students={fs}/><FeeAccountRecord students={fs} accounts={accounts||[]}/></section>
+ return <PrototypePage title="Finance & Fees" subtitle="Fees, payments, arrears, invoices, cashbook and receipts" action={<a href="#overview" className="prototype-primary-button">+ Add Fee Record</a>} kpis={[{label:'Total Collected',value:`KES ${paid.toLocaleString('en-KE')}`,note:'Live recorded payments',tone:'navy'},{label:'Total Arrears',value:`KES ${Math.max(due-paid,0).toLocaleString('en-KE')}`,note:'Outstanding balances',tone:'green'},{label:'Fee-Hold Students',value:holds,note:'Linked to transport/teachers',tone:'red'},{label:'Payments Recorded',value:(payments||[]).length,note:'Payment entries',tone:'yellow'}]} tabs={[["#overview","Fees & Payments"],["#payment-history","Payments & Receipts"],["#statements","Student Statements"],["#cashbook","Money In & Out"],["#invoices","Invoices"],["#balances","Balances & Fee Hold"]]}>
+  <section id="overview"><FinanceDesk students={fs}/></section>
   <section id="payment-history"><PaymentHistory /></section>
   <section id="statements"><StudentFeeStatements /></section>
   <section id="cashbook"><Cashbook /></section>
