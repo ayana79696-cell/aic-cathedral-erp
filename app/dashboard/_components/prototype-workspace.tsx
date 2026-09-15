@@ -4,14 +4,15 @@ import Link from 'next/link'
 import {Children, cloneElement, isValidElement, useState} from 'react'
 
 export type PrototypeKpi = { label: string; value: string | number; note?: string; tone?: 'navy'|'green'|'blue'|'red'|'yellow' }
+type TabChildProps = { id?: string; [key:string]: unknown }
 
 export function PrototypePage({ title, subtitle, action, kpis = [], tabs = [], children }: { title:string; subtitle:string; action?:React.ReactNode; kpis?:PrototypeKpi[]; tabs?:[string,string][]; children:React.ReactNode }) {
  const [selected,setSelected]=useState(tabs[0]?.[0]?.replace(/^#/,'')||'')
  const tabIds=new Set(tabs.map(([href])=>href.replace(/^#/,'')))
  const content=Children.map(children,child=>{
-  if(!isValidElement(child)) return child
-  const id=typeof child.props?.id==='string'?child.props.id:''
-  if(id && tabIds.has(id)) return cloneElement(child as React.ReactElement<any>,{hidden:id!==selected})
+  if(!isValidElement<TabChildProps>(child)) return child
+  const id=typeof child.props.id==='string'?child.props.id:''
+  if(id && tabIds.has(id)) return cloneElement(child,{hidden:id!==selected})
   return child
  })
  return <main className="main prototype-module">
