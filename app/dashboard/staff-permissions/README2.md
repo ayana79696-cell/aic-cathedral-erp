@@ -1,0 +1,1 @@
+Use /dashboard/staff-permissions for Staff Permissions. Short Leave routes to Head Teacher / HOI; Staff Off routes to HR. Approved and rejected records are retained and printable, with Paid / Unpaid status.
