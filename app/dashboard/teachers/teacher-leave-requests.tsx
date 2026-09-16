@@ -1,18 +1,193 @@
 'use client'
 
-import {useEffect,useState} from 'react'
-import {createClient} from '../../../lib/supabase/client'
+import { useEffect, useState } from 'react'
+import { createClient } from '../../../lib/supabase/client'
 import LeaveSignature from '../hr/leave-signature'
 
-type RequestRow={id:string;start_date:string;end_date:string;start_time:string|null;end_time:string|null;reason:string;status:string;request_type:string;approval_role:string;decision_note:string|null;created_at:string;pay_status:string|null}
-const label=(type:string)=>type==='short_leave'?'Short Leave':type==='off'?'Staff Off':'Leave'
-const parseReason=(raw:string)=>{try{const x=JSON.parse(raw);if(x&&typeof x==='object')return x}catch{}return{absenceDetails:raw,staffSignature:''}}
+type RequestRow = {
+  id: string
+  start_date: string
+  end_date: string
+  start_time: string | null
+  end_time: string | null
+  reason: string
+  status: string
+  request_type: string
+  approval_role: string
+  decision_note: string | null
+  created_at: string
+  pay_status: string | null
+}
 
-export default function TeacherLeaveRequests(){
- const db=createClient();const[staffId,setStaffId]=useState('');const[requests,setRequests]=useState<RequestRow[]>([]);const[type,setType]=useState<'leave'|'short_leave'|'off'>('leave');const[startDate,setStartDate]=useState('');const[endDate,setEndDate]=useState('');const[startTime,setStartTime]=useState('');const[endTime,setEndTime]=useState('');const[reason,setReason]=useState('');const[signature,setSignature]=useState('');const[payStatus,setPayStatus]=useState<'paid'|'unpaid'>('paid');const[message,setMessage]=useState('');const[loading,setLoading]=useState(false)
- const load=async()=>{const{data:{user}}=await db.auth.getUser();if(!user)return;const{data:staff}=await db.from('staff').select('id').eq('profile_id',user.id).maybeSingle();if(!staff){setMessage('Your teacher account is not linked to a staff profile. Contact the administrator.');return}setStaffId(staff.id);const{data,error}=await db.from('leave_requests').select('id,start_date,end_date,start_time,end_time,reason,status,request_type,approval_role,decision_note,created_at,pay_status').eq('staff_id',staff.id).order('created_at',{ascending:false});if(error)setMessage(error.message);else setRequests(data||[])}
- useEffect(()=>{load()},[])
- const needsTime=type==='short_leave';const reset=()=>{setStartDate('');setEndDate('');setStartTime('');setEndTime('');setReason('');setSignature('');setPayStatus('paid')}
- const submit=async()=>{setMessage('');if(!staffId){setMessage('Staff profile not found.');return}if(!startDate||!endDate||!reason.trim()){setMessage('Please provide the date(s) and reason.');return}if(needsTime&&(!startTime||!endTime)){setMessage('Short leave requires a start and end time.');return}if(!signature){setMessage('Please draw your signature or type your name.');return}setLoading(true);const details={applicationDate:new Date().toISOString().slice(0,10),absenceReason:'Other',absenceDetails:reason.trim(),workCoverage:'',responsiblePerson:'',staffSignature:signature,approverSignature:'',approverName:'',approverSignedAt:'',decisionComment:''};const{error}=await db.from('leave_requests').insert({staff_id:staffId,start_date:startDate,end_date:endDate,start_time:needsTime?startTime:null,end_time:needsTime?endTime:null,reason:JSON.stringify(details),request_type:type,approval_role:type==='off'?'hr':'headteacher',status:'pending',pay_status:payStatus});setLoading(false);if(error)setMessage(error.message);else{setMessage('Request sent successfully.');reset();await load()}}
- return <section className="prototype-panel" style={{marginTop:18}}><div className="prototype-panel-head"><div><h2>Leave & Off Requests</h2><p className="muted">Send leave, short leave or staff-off requests and track every decision.</p></div></div><div className="prototype-panel-body"><div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12}}><label>Request type<select value={type} onChange={e=>setType(e.target.value as 'leave'|'short_leave'|'off')}><option value="leave">Leave</option><option value="short_leave">Short Leave</option><option value="off">Staff Off</option></select></label><label>Start date<input type="date" value={startDate} onChange={e=>setStartDate(e.target.value)}/></label><label>End date<input type="date" value={endDate} onChange={e=>setEndDate(e.target.value)}/></label>{needsTime&&<><label>Start time<input type="time" value={startTime} onChange={e=>setStartTime(e.target.value)}/></label><label>End time<input type="time" value={endTime} onChange={e=>setEndTime(e.target.value)}/></>}<label>Pay status<select value={payStatus} onChange={e=>setPayStatus(e.target.value as 'paid'|'unpaid')}><option value="paid">Paid</option><option value="unpaid">Unpaid</option></select></label><label style={{gridColumn:'1/-1'}}>Reason<textarea value={reason} onChange={e=>setReason(e.target.value)} placeholder="Explain why you are requesting this leave/off" rows={3}/></label></div><LeaveSignature label="Staff signature" value={signature} onChange={setSignature}/><div style={{marginTop:12}}><button className="btn" onClick={submit} disabled={loading}>{loading?'Sending…':'Send Request'}</button>{message&&<span className="muted" style={{marginLeft:12}}>{message}</span>}</div><div style={{marginTop:24}}><h3>My requests</h3><div className="prototype-table-wrap"><table className="prototype-table"><thead><tr><th>TYPE</th><th>DATE(S)</th><th>TIME</th><th>REASON</th><th>ROUTE</th><th>PAY</th><th>STATUS</th><th>DECISION</th></tr></thead><tbody>{requests.map(r=>{const d=parseReason(r.reason);return <tr key={r.id}><td><strong>{label(r.request_type)}</strong></td><td>{r.start_date}{r.end_date!==r.start_date?` → ${r.end_date}`:''}</td><td>{r.start_time&&r.end_time?`${r.start_time.slice(0,5)} – ${r.end_time.slice(0,5)}`:'—'}</td><td>{d.absenceDetails||r.reason}</td><td>{r.approval_role==='headteacher'?'Head Teacher':'HR'}</td><td>{r.pay_status==='unpaid'?'Unpaid':'Paid'}</td><td><strong>{r.status}</strong></td><td>{r.status==='rejected'?(r.decision_note||'Rejected by approver'):(r.status==='approved'?'Approved':'Awaiting decision')}</td></tr>})}{requests.length===0&&<tr><td colSpan={8} className="prototype-empty">No requests yet.</td></tr>}</tbody></table></div></div></div></section>
+const label = (type: string) => type === 'short_leave' ? 'Short Leave' : type === 'off' ? 'Staff Off' : 'Leave'
+
+const parseReason = (raw: string) => {
+  try {
+    const x = JSON.parse(raw)
+    if (x && typeof x === 'object') return x
+  } catch {}
+  return { absenceDetails: raw, staffSignature: '' }
+}
+
+export default function TeacherLeaveRequests() {
+  const db = createClient()
+  const [staffId, setStaffId] = useState('')
+  const [requests, setRequests] = useState<RequestRow[]>([])
+  const [type, setType] = useState<'leave' | 'short_leave' | 'off'>('leave')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [startTime, setStartTime] = useState('')
+  const [endTime, setEndTime] = useState('')
+  const [reason, setReason] = useState('')
+  const [signature, setSignature] = useState('')
+  const [payStatus, setPayStatus] = useState<'paid' | 'unpaid'>('paid')
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const load = async () => {
+    const { data: { user } } = await db.auth.getUser()
+    if (!user) return
+    const { data: staff } = await db.from('staff').select('id').eq('profile_id', user.id).maybeSingle()
+    if (!staff) {
+      setMessage('Your teacher account is not linked to a staff profile. Contact the administrator.')
+      return
+    }
+    setStaffId(staff.id)
+    const { data, error } = await db.from('leave_requests')
+      .select('id,start_date,end_date,start_time,end_time,reason,status,request_type,approval_role,decision_note,created_at,pay_status')
+      .eq('staff_id', staff.id)
+      .order('created_at', { ascending: false })
+    if (error) setMessage(error.message)
+    else setRequests(data || [])
+  }
+
+  useEffect(() => { load() }, [])
+
+  const needsTime = type === 'short_leave'
+
+  const reset = () => {
+    setStartDate('')
+    setEndDate('')
+    setStartTime('')
+    setEndTime('')
+    setReason('')
+    setSignature('')
+    setPayStatus('paid')
+  }
+
+  const submit = async () => {
+    setMessage('')
+    if (!staffId) { setMessage('Staff profile not found.'); return }
+    if (!startDate || !endDate || !reason.trim()) { setMessage('Please provide the date(s) and reason.'); return }
+    if (needsTime && (!startTime || !endTime)) { setMessage('Short leave requires a start and end time.'); return }
+    if (!signature) { setMessage('Please draw your signature or type your name.'); return }
+
+    setLoading(true)
+    const details = {
+      applicationDate: new Date().toISOString().slice(0, 10),
+      absenceReason: 'Other',
+      absenceDetails: reason.trim(),
+      workCoverage: '',
+      responsiblePerson: '',
+      staffSignature: signature,
+      approverSignature: '',
+      approverName: '',
+      approverSignedAt: '',
+      decisionComment: ''
+    }
+    const { error } = await db.from('leave_requests').insert({
+      staff_id: staffId,
+      start_date: startDate,
+      end_date: endDate,
+      start_time: needsTime ? startTime : null,
+      end_time: needsTime ? endTime : null,
+      reason: JSON.stringify(details),
+      request_type: type,
+      approval_role: type === 'off' ? 'hr' : 'headteacher',
+      status: 'pending',
+      pay_status: payStatus
+    })
+    setLoading(false)
+    if (error) setMessage(error.message)
+    else {
+      setMessage('Request sent successfully.')
+      reset()
+      await load()
+    }
+  }
+
+  return (
+    <section className="prototype-panel" style={{ marginTop: 18 }}>
+      <div className="prototype-panel-head">
+        <div>
+          <h2>Leave & Off Requests</h2>
+          <p className="muted">Send leave, short leave or staff-off requests and track every decision.</p>
+        </div>
+      </div>
+      <div className="prototype-panel-body">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12 }}>
+          <label>Request type
+            <select value={type} onChange={e => setType(e.target.value as 'leave' | 'short_leave' | 'off')}>
+              <option value="leave">Leave</option>
+              <option value="short_leave">Short Leave</option>
+              <option value="off">Staff Off</option>
+            </select>
+          </label>
+          <label>Start date<input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /></label>
+          <label>End date<input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} /></label>
+          {needsTime && (
+            <>
+              <label>Start time<input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} /></label>
+              <label>End time<input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} /></label>
+            </>
+          )}
+          <label>Pay status
+            <select value={payStatus} onChange={e => setPayStatus(e.target.value as 'paid' | 'unpaid')}>
+              <option value="paid">Paid</option>
+              <option value="unpaid">Unpaid</option>
+            </select>
+          </label>
+          <label style={{ gridColumn: '1/-1' }}>Reason
+            <textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="Explain why you are requesting this leave/off" rows={3} />
+          </label>
+        </div>
+
+        <LeaveSignature label="Staff signature" value={signature} onChange={setSignature} />
+
+        <div style={{ marginTop: 12 }}>
+          <button className="btn" onClick={submit} disabled={loading}>{loading ? 'Sending…' : 'Send Request'}</button>
+          {message && <span className="muted" style={{ marginLeft: 12 }}>{message}</span>}
+        </div>
+
+        <div style={{ marginTop: 24 }}>
+          <h3>My requests</h3>
+          <div className="prototype-table-wrap">
+            <table className="prototype-table">
+              <thead>
+                <tr><th>TYPE</th><th>DATE(S)</th><th>TIME</th><th>REASON</th><th>ROUTE</th><th>PAY</th><th>STATUS</th><th>DECISION</th></tr>
+              </thead>
+              <tbody>
+                {requests.map(r => {
+                  const d = parseReason(r.reason)
+                  return (
+                    <tr key={r.id}>
+                      <td><strong>{label(r.request_type)}</strong></td>
+                      <td>{r.start_date}{r.end_date !== r.start_date ? ` → ${r.end_date}` : ''}</td>
+                      <td>{r.start_time && r.end_time ? `${r.start_time.slice(0, 5)} – ${r.end_time.slice(0, 5)}` : '—'}</td>
+                      <td>{d.absenceDetails || r.reason}</td>
+                      <td>{r.approval_role === 'headteacher' ? 'Head Teacher' : 'HR'}</td>
+                      <td>{r.pay_status === 'unpaid' ? 'Unpaid' : 'Paid'}</td>
+                      <td><strong>{r.status}</strong></td>
+                      <td>{r.status === 'rejected' ? (r.decision_note || 'Rejected by approver') : (r.status === 'approved' ? 'Approved' : 'Awaiting decision')}</td>
+                    </tr>
+                  )
+                })}
+                {requests.length === 0 && <tr><td colSpan={8} className="prototype-empty">No requests yet.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
 }
