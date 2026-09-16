@@ -1,0 +1,9 @@
+'use client'
+
+import {useRef,useState} from 'react'
+import LeaveSignature from './leave-signature'
+
+export default function LeaveApprovalModal({request,staffName,role,onClose,onSave}:{request:any;staffName:string;role:string;onClose:()=>void;onSave:(status:'approved'|'rejected',pay:'paid'|'unpaid',signature:string,comment:string)=>void}){
+ const[status,setStatus]=useState<'approved'|'rejected'>('approved');const[pay,setPay]=useState<'paid'|'unpaid'>(request.pay_status==='unpaid'?'unpaid':'paid');const[signature,setSignature]=useState('');const[comment,setComment]=useState('')
+ return <div className="signature-modal"><div className="signature-dialog"><h2>{status==='approved'?'Approve':'Reject'} {request.request_type==='short_leave'?'Short Leave':request.request_type==='off'?'Staff Off':'Leave'}</h2><p className="muted">{staffName} · {request.start_date} → {request.end_date}</p><div className="decision-tabs"><button className={status==='approved'?'decision active':'decision'} onClick={()=>setStatus('approved')}>Approve</button><button className={status==='rejected'?'decision reject active':'decision reject'} onClick={()=>setStatus('rejected')}>Reject</button></div>{status==='approved'&&<select value={pay} onChange={e=>setPay(e.target.value as 'paid'|'unpaid')}><option value="paid">Approve as Paid</option><option value="unpaid">Approve as Unpaid</option></select>}<textarea placeholder={status==='approved'?'Optional approval comment':'Reason for rejection'} value={comment} onChange={e=>setComment(e.target.value)}/><LeaveSignature label={role==='headteacher'?'Head Teacher / HOI signature':'HR signature'} value={signature} onChange={setSignature}/><div className="print-actions"><button className="btn" disabled={!signature} onClick={()=>onSave(status,pay,signature,comment)}>{status==='approved'?'Approve & Sign':'Reject & Sign'}</button><button className="btn secondary" onClick={onClose}>Cancel</button></div></div></div>
+}
