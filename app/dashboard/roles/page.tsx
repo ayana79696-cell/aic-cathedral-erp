@@ -3,79 +3,95 @@ import {createClient} from '../../../lib/supabase/server'
 const roles=[
  ['super_admin','Super Admin','Everything: all modules, all records, all users, settings, approvals and audit visibility.'],
  ['admin','Admin','School administration across students, academics, finance, HR, procurement/inventory, transport and communications.'],
- ['headteacher','Head Teacher','Academic oversight, student records, results review, attendance, HR visibility, reports and school intelligence.'],
+ ['headteacher','Head Teacher','Academic oversight, student records, results review/publishing, attendance, staff permissions and reports.'],
  ['deputy_headteacher','Deputy Head Teacher','Academic and school operations, student records, results, attendance, teacher/timetable oversight and reports.'],
- ['academic','Academic','Academics, exams/CBC, results, teacher assignments/workload, timetable and academic reports.'],
- ['class_teacher','Class Teacher','Assigned class and stream, learner records, attendance, marks/results, timetable and class-result publishing.'],
- ['subject_teacher','Subject Teacher','Assigned learners/learning areas, marks/results, attendance and timetable.'],
- ['finance','Finance','Fees, payments, receipts, pending fees, finance reports and finance intelligence/anomaly review.'],
- ['bursar','Bursar','Fees, payments, receipts, pending fees and finance reports.'],
- ['accountant','Accountant','Fees, payments, receipts, pending fees, finance intelligence/anomaly review and reports.'],
- ['petty_cash','Petty Cash','Standalone petty-cash vouchers, transactions, balances and reports.'],
- ['hr_admin','HR Admin','Staff/HR records, payroll, leave requests and approvals, attendance and HR reports.'],
- ['hr','HR / Staff','Staff/HR records, payroll viewing, leave requests, attendance and reports.'],
+ ['academic','Academic','Academics, exams/CBC, marks, results, teacher assignments/workload, timetable and academic reports.'],
+ ['class_teacher','Class Teacher','Assigned class and stream, learner records, attendance, marks/results, class remarks, timetable and class-result publishing.'],
+ ['subject_teacher','Subject Teacher','Assigned learners/learning areas, marks entry/editing, attendance and timetable.'],
+ ['finance','Finance','Fees, payments, receipts, pending fees, balances, budget, finance reports and finance intelligence.'],
+ ['bursar','Bursar','Fees, payments, receipts, pending fees, balances and finance reports.'],
+ ['accountant','Accountant','Fees, payments, receipts, balances, finance intelligence and reports.'],
+ ['petty_cash','Petty Cash','Standalone petty-cash vouchers, transactions, balances and weekly reports.'],
+ ['hr_admin','HR Admin','Staff/HR records, payroll, leave/off approvals, staff permissions, attendance and HR reports.'],
+ ['hr','HR / Staff','Staff/HR records, payroll viewing, leave/off requests and approvals, attendance and reports.'],
  ['operations','Operations','Procurement/inventory, transport, teacher/timetable operations, communications and intelligence.'],
  ['procurement_officer','Procurement Officer','Procurement and inventory workflows, stock/intelligence and reports.'],
  ['procurement','Procurement','Procurement and inventory workflows, stock/intelligence and reports.'],
- ['storekeeper','Storekeeper','Inventory/stock control, procurement intelligence and reports.'],
- ['inventory','Inventory','Inventory/stock control, procurement intelligence and reports.'],
+ ['storekeeper','Storekeeper','Inventory/stock control, stock movements, procurement intelligence and reports.'],
+ ['inventory','Inventory','Inventory/stock control, stock movements, procurement intelligence and reports.'],
  ['transport_manager','Transport Manager','Transport, vehicle/route operations, transport safety controls and reports.'],
- ['board','Board','Dashboard, board view and reports.']
+ ['board','Board','Dashboard, school intelligence and reports.']
 ] as const
 
 const areas=[
  ['Dashboard','School dashboard and role-based overview'],
- ['Students','Student admissions, class/stream records, parent details, health field and student passport'],
- ['Academics','Academic workspace including Exams & CBC and Results'],
- ['Results & Exams','EE / ME / AE / BE grading, points, X/Y exam status, automatic remarks, merit list, stream position, overall class position and class-teacher publishing'],
- ['Finance & Fees','Fees/payments, receipts, pending fees, statements, money in/out, invoices, balances/fee hold, budget/planning and finance intelligence'],
- ['Petty Cash','Standalone petty cash: Week 1–4, opening balance, money in/out, vouchers, requisition/LPO/invoice/receipt/driver fields, suppliers, payment methods, M-Pesa code, cheque number, received by, running balance and branded weekly reports'],
- ['HR / Payroll','Staff, contracts, attendance, disciplinary, leave/off and payroll'],
- ['Leave & Payroll Rules','Paid/unpaid leave, approved/rejected/unapproved status, manual payroll number, approved unpaid-day deduction, optional NSSF 6%, optional SHA 2.75%, other deduction and automatic net pay'],
- ['Procurement & Inventory','One workspace containing procurement and inventory/stock control, requisitions, LPO/job card, invoice/delivery, supplier and approval workflow'],
- ['Transport','Trips, buses/routes, insurance, fueling, mileage, service/maintenance and route payment controls'],
- ['Timetable & Teacher Assignments','Class/stream teacher assignment, teacher workload and timetable operations'],
- ['Communications','Parent broadcast through configured communication channels, including WhatsApp/SMS/email/in-app workflow'],
+ ['Students','Admissions, learner records, parent details, health, grade/stream and digital passport'],
+ ['Student Parents & Portal','Parent links, portal code and parent-facing learner information'],
+ ['Academic Setup','Academic years, terms, grades/classes, streams and CBC learning areas'],
+ ['Exams & CBC Setup','Exams, learning areas, competencies, grading levels and assessment setup'],
+ ['Marks Entry','Enter marks for assigned learners, subjects/learning areas and exams'],
+ ['Edit Marks','Correct or update marks before publication'],
+ ['X / Y Exam Status','Record X for not done/sat and Y for irregularity'],
+ ['Automatic Grading','EE / ME / AE / BE grades and points'],
+ ['Automatic Remarks','Generate learning-area/result remarks from recorded performance'],
+ ['Class Results','Class results, stream positions, overall positions and report forms'],
+ ['Merit List','Merit/class ranking and learner position reports'],
+ ['Publish Results','Publish results for an assigned class after review'],
+ ['Attendance','Student attendance and staff attendance records'],
+ ['Timetable & Assignments','Class/stream teacher assignment, teacher workload and timetable'],
  ['Teacher Check-ins','Teacher check-in/check-out records and attendance visibility'],
- ['Check-in Locations','Approved teacher check-in locations, radius/meters and location controls'],
+ ['Leave / Off Requests','Submit leave, short leave and staff off requests'],
+ ['Leave / Off Approval','Head Teacher/HR approval or rejection and decision comments'],
+ ['Leave / Off Pay Decision','Approver chooses Paid or Unpaid after reviewing the request'],
+ ['Leave / Off History PDF','Individual approved/rejected permission sheet PDF/Print'],
+ ['Staff Signatures','Electronic staff signature on permission requests'],
+ ['Approver Signatures','Electronic Head Teacher/HR signature after approval or rejection'],
+ ['HR / Payroll','Staff, contracts, payroll, disciplinary records and payroll rules'],
+ ['Finance & Fees','Fees/payments, receipts, balances, pending fees, statements and fee holds'],
+ ['Budget & Planning','Income, fees, admissions/interview income, salaries, supplier invoices and other expenditure'],
+ ['Petty Cash','Standalone petty cash, Week 1–4 reports, vouchers, money in/out and running balances'],
+ ['Procurement','Requisitions, approvals, LPOs, job cards, suppliers and invoice/delivery workflow'],
+ ['Inventory','Stock receiving/issuing, categories, minimum stock and low-stock alerts'],
+ ['Transport','Trips, buses/routes, insurance, fuel, mileage, service/maintenance and payment controls'],
+ ['Communications','Parent broadcast through configured WhatsApp/SMS/email/in-app channels'],
  ['School Intelligence','Operational and management intelligence dashboards'],
- ['Reports','School, academic, finance, HR, transport and petty-cash reporting'],
- ['School Settings','School configuration and branding/settings'],
- ['User Management','User accounts, role assignment, class/stream teacher assignment and access management'],
+ ['Reports','Academic, finance, HR, transport, inventory, procurement and petty-cash reports'],
+ ['School Settings','School configuration, branding and system settings'],
+ ['User Management','Users, roles, teacher assignments and access management'],
  ['Audit Logs','Administrative audit visibility']
 ]
 
 const roleAreas:Record<string,string[]>= {
  super_admin:areas.map(a=>a[0]),
- admin:['Dashboard','Students','Academics','Finance & Fees','Petty Cash','HR / Payroll','Procurement & Inventory','Transport','Timetable & Teacher Assignments','Communications','School Intelligence','Reports','School Settings'],
- headteacher:['Dashboard','Students','Academics','Results & Exams','Finance & Fees','HR / Payroll','Timetable & Teacher Assignments','School Intelligence','Reports'],
- deputy_headteacher:['Dashboard','Students','Academics','Results & Exams','HR / Payroll','Timetable & Teacher Assignments','School Intelligence','Reports'],
- academic:['Dashboard','Students','Academics','Results & Exams','Timetable & Teacher Assignments','School Intelligence','Reports'],
- class_teacher:['Dashboard','Students','Academics','Results & Exams','Timetable & Teacher Assignments','Teacher Check-ins','Reports'],
- subject_teacher:['Dashboard','Students','Academics','Results & Exams','Timetable & Teacher Assignments','Teacher Check-ins','Reports'],
- finance:['Dashboard','Finance & Fees','Reports','School Intelligence'],
- bursar:['Dashboard','Finance & Fees','Reports'],
- accountant:['Dashboard','Finance & Fees','Reports','School Intelligence'],
+ admin:areas.map(a=>a[0]).filter(x=>!['Audit Logs'].includes(x)),
+ headteacher:['Dashboard','Students','Student Parents & Portal','Academic Setup','Exams & CBC Setup','Marks Entry','Edit Marks','X / Y Exam Status','Automatic Grading','Automatic Remarks','Class Results','Merit List','Publish Results','Attendance','Timetable & Assignments','Teacher Check-ins','Leave / Off Approval','Leave / Off Pay Decision','Leave / Off History PDF','Approver Signatures','HR / Payroll','Finance & Fees','Budget & Planning','School Intelligence','Reports'],
+ deputy_headteacher:['Dashboard','Students','Student Parents & Portal','Academic Setup','Exams & CBC Setup','Marks Entry','Edit Marks','X / Y Exam Status','Automatic Grading','Automatic Remarks','Class Results','Merit List','Publish Results','Attendance','Timetable & Assignments','Teacher Check-ins','Leave / Off Requests','Leave / Off History PDF','Approver Signatures','Reports','School Intelligence'],
+ academic:['Dashboard','Students','Student Parents & Portal','Academic Setup','Exams & CBC Setup','Marks Entry','Edit Marks','X / Y Exam Status','Automatic Grading','Automatic Remarks','Class Results','Merit List','Publish Results','Attendance','Timetable & Assignments','Reports','School Intelligence'],
+ class_teacher:['Dashboard','Students','Student Parents & Portal','Exams & CBC Setup','Marks Entry','Edit Marks','X / Y Exam Status','Automatic Grading','Automatic Remarks','Class Results','Merit List','Publish Results','Attendance','Timetable & Assignments','Teacher Check-ins','Leave / Off Requests','Leave / Off History PDF','Staff Signatures','Reports'],
+ subject_teacher:['Dashboard','Students','Student Parents & Portal','Exams & CBC Setup','Marks Entry','Edit Marks','X / Y Exam Status','Automatic Grading','Automatic Remarks','Class Results','Attendance','Timetable & Assignments','Teacher Check-ins','Leave / Off Requests','Leave / Off History PDF','Staff Signatures','Reports'],
+ finance:['Dashboard','Students','Finance & Fees','Budget & Planning','School Intelligence','Reports'],
+ bursar:['Dashboard','Students','Finance & Fees','Reports'],
+ accountant:['Dashboard','Students','Finance & Fees','Budget & Planning','School Intelligence','Reports'],
  petty_cash:['Dashboard','Petty Cash','Reports'],
- hr_admin:['Dashboard','HR / Payroll','Leave & Payroll Rules','Teacher Check-ins','Check-in Locations','Reports'],
- hr:['Dashboard','HR / Payroll','Leave & Payroll Rules','Teacher Check-ins','Reports'],
- operations:['Dashboard','Procurement & Inventory','Transport','Timetable & Teacher Assignments','Communications','School Intelligence','Reports'],
- procurement_officer:['Dashboard','Procurement & Inventory','Reports'],
- procurement:['Dashboard','Procurement & Inventory','Reports'],
- storekeeper:['Dashboard','Procurement & Inventory','Reports'],
- inventory:['Dashboard','Procurement & Inventory','Reports'],
+ hr_admin:['Dashboard','Students','HR / Payroll','Attendance','Teacher Check-ins','Leave / Off Requests','Leave / Off Approval','Leave / Off Pay Decision','Leave / Off History PDF','Staff Signatures','Approver Signatures','Reports'],
+ hr:['Dashboard','Students','HR / Payroll','Attendance','Teacher Check-ins','Leave / Off Requests','Leave / Off Approval','Leave / Off Pay Decision','Leave / Off History PDF','Staff Signatures','Approver Signatures','Reports'],
+ operations:['Dashboard','Procurement','Inventory','Transport','Timetable & Assignments','Communications','School Intelligence','Reports'],
+ procurement_officer:['Dashboard','Procurement','Inventory','Reports'],
+ procurement:['Dashboard','Procurement','Inventory','Reports'],
+ storekeeper:['Dashboard','Inventory','Procurement','Reports'],
+ inventory:['Dashboard','Inventory','Procurement','Reports'],
  transport_manager:['Dashboard','Transport','Reports'],
  board:['Dashboard','School Intelligence','Reports']
 }
 
 const label=(r:string)=>roles.find(x=>x[0]===r)?.[1]||r
-const norm=(r:string)=>String(r||'').trim().toLowerCase().replace(/[\\s-]+/g,'_')
+const norm=(r:string)=>String(r||'').trim().toLowerCase().replace(/[\s-]+/g,'_')
 
 export default async function Roles(){
  const s=await createClient()
  const {data}=await s.from('profiles').select('id,full_name,role,status').order('full_name')
  return <main className="main">
-  <header className="top"><div><h1>Roles & Access</h1><p className="muted">Complete role map for the current ERP. Access follows the same role model used by the dashboard navigation.</p></div></header>
+  <header className="top"><div><h1>Roles & Access</h1><p className="muted">Detailed role map for the ERP. Individual permissions are shown instead of hiding them inside broad module names.</p></div></header>
 
   <section className="card">
    <h2>System roles</h2>
@@ -83,23 +99,23 @@ export default async function Roles(){
   </section>
 
   <section className="card" style={{marginTop:16}}>
-   <h2>Module access matrix</h2>
-   <p className="muted">✓ means the role is intended to see or work in that area. Class and subject teachers remain scoped to their assigned classes, streams and learning areas where applicable.</p>
-   <div style={{overflowX:'auto'}}><table style={{width:'100%',borderCollapse:'collapse',minWidth:1100}}>
-    <thead><tr><th style={{textAlign:'left',padding:10,position:'sticky',left:0,background:'inherit'}}>Role</th>{areas.map(a=><th key={a[0]} style={{padding:8,fontSize:11,whiteSpace:'nowrap'}}>{a[0]}</th>)}</tr></thead>
-    <tbody>{roles.map(r=>{const allowed=roleAreas[r[0]]||[];return <tr key={r[0]}><td style={{padding:10,whiteSpace:'nowrap',position:'sticky',left:0,background:'inherit'}}><strong>{r[1]}</strong></td>{areas.map(a=><td key={a[0]} style={{textAlign:'center',padding:8}}>{allowed.includes(a[0])?'✓':'—'}</td>)}</tr>})}</tbody>
+   <h2>Detailed permission matrix</h2>
+   <p className="muted">✓ means the role can use that function. Class and Subject Teachers remain limited to their assigned classes, streams and learning areas.</p>
+   <div style={{overflowX:'auto'}}><table style={{width:'100%',borderCollapse:'collapse',minWidth:1900}}>
+    <thead><tr><th style={{textAlign:'left',padding:10,position:'sticky',left:0,background:'inherit',zIndex:2}}>Role</th>{areas.map(a=><th key={a[0]} title={a[1]} style={{padding:8,fontSize:10,whiteSpace:'nowrap',writingMode:'vertical-rl',transform:'rotate(180deg)',height:170}}>{a[0]}</th>)}</tr></thead>
+    <tbody>{roles.map(r=>{const allowed=roleAreas[r[0]]||[];return <tr key={r[0]}><td style={{padding:10,whiteSpace:'nowrap',position:'sticky',left:0,background:'inherit',zIndex:1}}><strong>{r[1]}</strong></td>{areas.map(a=><td key={a[0]} style={{textAlign:'center',padding:8,fontSize:16}}>{allowed.includes(a[0])?'✓':'—'}</td>)}</tr>})}</tbody>
    </table></div>
   </section>
 
   <section className="card" style={{marginTop:16}}>
-   <h2>Updated access rules</h2>
+   <h2>Key role rules</h2>
    <div className="cards">
-    <div className="card"><strong>Results</strong><p className="muted">Teachers use EE, ME, AE and BE. X means the learner did not do the exam and Y records an exam irregularity. Remarks, points and positions are generated automatically. Class Teachers can publish their selected class results.</p></div>
-    <div className="card"><strong>HR & Payroll</strong><p className="muted">Leave approval and pay status are separate. Approved + Unpaid leave can reduce salary. Payroll has a manual payroll number, optional NSSF 6%, optional SHA 2.75%, other deduction, unpaid days and automatic Net Pay.</p></div>
-    <div className="card"><strong>Petty Cash</strong><p className="muted">Petty Cash is now a standalone top-level workspace, separate from Finance & Fees. It includes Week 1–4 reporting, opening/remaining balances, vouchers and transaction details.</p></div>
-    <div className="card"><strong>Procurement & Inventory</strong><p className="muted">Procurement and Inventory stay together as one workspace with requisitions, LPO/job cards, supplier workflow, invoice/delivery and stock control.</p></div>
-    <div className="card"><strong>Teacher assignments</strong><p className="muted">Class Teachers are assigned by class and stream. Their timetable and learner/result access follows that assignment.</p></div>
-    <div className="card"><strong>Super Admin</strong><p className="muted">Super Admin remains the unrestricted administrative role and can view/manage the full ERP, users, roles and settings.</p></div>
+    <div className="card"><strong>Marks Entry</strong><p className="muted">Class Teachers and Subject Teachers can enter and edit marks for their assigned learners/learning areas. Academic, Deputy Head Teacher and Head Teacher have academic oversight.</p></div>
+    <div className="card"><strong>Results</strong><p className="muted">EE, ME, AE and BE are used for grading. X records a learner who did not do/sit the exam and Y records an irregularity. Remarks, points and positions are generated from recorded results.</p></div>
+    <div className="card"><strong>Leave / Off</strong><p className="muted">Staff submit their request and electronic signature. Short Leave/Leave is handled through the Head Teacher route; Staff Off is handled through HR. The approver chooses Paid or Unpaid and signs the final decision.</p></div>
+    <div className="card"><strong>Finance</strong><p className="muted">Finance/Bursar/Accountant access is separated by role. Pay status for leave is a decision made by the appropriate approver, not by the teacher submitting the request.</p></div>
+    <div className="card"><strong>Procurement & Inventory</strong><p className="muted">Procurement handles requisitions, approvals, LPOs and supplier workflows. Inventory/Storekeeper handles stock control and low-stock operations.</p></div>
+    <div className="card"><strong>Teacher scope</strong><p className="muted">Teacher permissions do not mean access to every learner. The system should scope marks, attendance and learner records to assigned classes, streams and learning areas.</p></div>
    </div>
   </section>
 
