@@ -1,0 +1,1 @@
+The signature component is normalized to crop and fit signatures inside the official signature gap.
