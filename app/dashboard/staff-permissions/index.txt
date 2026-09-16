@@ -1,0 +1,1 @@
+Staff Permissions is available at /dashboard/staff-permissions.
