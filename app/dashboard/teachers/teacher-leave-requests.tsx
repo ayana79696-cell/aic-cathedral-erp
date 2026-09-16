@@ -40,7 +40,6 @@ export default function TeacherLeaveRequests() {
   const [endTime, setEndTime] = useState('')
   const [reason, setReason] = useState('')
   const [signature, setSignature] = useState('')
-  const [payStatus, setPayStatus] = useState<'paid' | 'unpaid'>('paid')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -72,7 +71,6 @@ export default function TeacherLeaveRequests() {
     setEndTime('')
     setReason('')
     setSignature('')
-    setPayStatus('paid')
   }
 
   const submit = async () => {
@@ -105,7 +103,7 @@ export default function TeacherLeaveRequests() {
       request_type: type,
       approval_role: type === 'off' ? 'hr' : 'headteacher',
       status: 'pending',
-      pay_status: payStatus
+      pay_status: null
     })
     setLoading(false)
     if (error) setMessage(error.message)
@@ -141,12 +139,6 @@ export default function TeacherLeaveRequests() {
               <label>End time<input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} /></label>
             </>
           )}
-          <label>Pay status
-            <select value={payStatus} onChange={e => setPayStatus(e.target.value as 'paid' | 'unpaid')}>
-              <option value="paid">Paid</option>
-              <option value="unpaid">Unpaid</option>
-            </select>
-          </label>
           <label style={{ gridColumn: '1/-1' }}>Reason
             <textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="Explain why you are requesting this leave/off" rows={3} />
           </label>
@@ -176,7 +168,7 @@ export default function TeacherLeaveRequests() {
                       <td>{r.start_time && r.end_time ? `${r.start_time.slice(0, 5)} – ${r.end_time.slice(0, 5)}` : '—'}</td>
                       <td>{d.absenceDetails || r.reason}</td>
                       <td>{r.approval_role === 'headteacher' ? 'Head Teacher' : 'HR'}</td>
-                      <td>{r.pay_status === 'unpaid' ? 'Unpaid' : 'Paid'}</td>
+                      <td>{r.pay_status === 'unpaid' ? 'Unpaid' : r.pay_status === 'paid' ? 'Paid' : 'Pending'}</td>
                       <td><strong>{r.status}</strong></td>
                       <td>{r.status === 'rejected' ? (r.decision_note || 'Rejected by approver') : (r.status === 'approved' ? 'Approved' : 'Awaiting decision')}</td>
                     </tr>
