@@ -103,7 +103,9 @@ export default function TeacherLeaveRequests() {
       request_type: type,
       approval_role: type === 'off' ? 'hr' : 'headteacher',
       status: 'pending',
-      pay_status: null
+      // Database requires a value before approval; this is hidden from the requester
+      // and is replaced by Head Teacher/HR when the request is approved.
+      pay_status: 'paid'
     })
     setLoading(false)
     if (error) setMessage(error.message)
@@ -156,7 +158,7 @@ export default function TeacherLeaveRequests() {
           <div className="prototype-table-wrap">
             <table className="prototype-table">
               <thead>
-                <tr><th>TYPE</th><th>DATE(S)</th><th>TIME</th><th>REASON</th><th>ROUTE</th><th>PAY</th><th>STATUS</th><th>DECISION</th></tr>
+                <tr><th>TYPE</th><th>DATE(S)</th><th>TIME</th><th>REASON</th><th>ROUTE</th><th>STATUS</th><th>DECISION</th></tr>
               </thead>
               <tbody>
                 {requests.map(r => {
@@ -168,13 +170,12 @@ export default function TeacherLeaveRequests() {
                       <td>{r.start_time && r.end_time ? `${r.start_time.slice(0, 5)} – ${r.end_time.slice(0, 5)}` : '—'}</td>
                       <td>{d.absenceDetails || r.reason}</td>
                       <td>{r.approval_role === 'headteacher' ? 'Head Teacher' : 'HR'}</td>
-                      <td>{r.pay_status === 'unpaid' ? 'Unpaid' : r.pay_status === 'paid' ? 'Paid' : 'Pending'}</td>
                       <td><strong>{r.status}</strong></td>
                       <td>{r.status === 'rejected' ? (r.decision_note || 'Rejected by approver') : (r.status === 'approved' ? 'Approved' : 'Awaiting decision')}</td>
                     </tr>
                   )
                 })}
-                {requests.length === 0 && <tr><td colSpan={8} className="prototype-empty">No requests yet.</td></tr>}
+                {requests.length === 0 && <tr><td colSpan={7} className="prototype-empty">No requests yet.</td></tr>}
               </tbody>
             </table>
           </div>
