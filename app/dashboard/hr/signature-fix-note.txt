@@ -1,0 +1,1 @@
+Signature rendering fix tracked in code.
