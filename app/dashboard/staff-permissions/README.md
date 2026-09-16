@@ -1,0 +1,1 @@
+Staff Permissions module: submit Short Leave to Head Teacher, Staff Off to HR, retain permanent records, and print approval decisions.
