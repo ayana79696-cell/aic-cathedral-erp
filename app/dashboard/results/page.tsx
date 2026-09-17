@@ -17,13 +17,14 @@ export async function ResultsWorkspace(){
  let assignments:any[]=[]
  const isTeacher=['class_teacher','subject_teacher'].includes(profile?.role||'')
  if(isTeacher&&user?.id){
-  const{data:subjectAssignments}=await s.from('teacher_assignments').select('id,teacher_id,class_id,stream_id,learning_area_id,academic_year_id,term_id,active').eq('teacher_id',user.id).eq('active',true)
+  // teacher_assignments.teacher_id stores staff.id; class_teacher_assignments.teacher_id stores profile.id.
+  const{data:staff}=await s.from('staff').select('id').eq('profile_id',user.id).maybeSingle()
+  const teacherIds=[user.id,...(staff?.id?[staff.id]:[])]
+  const{data:subjectAssignments}=await s.from('teacher_assignments').select('id,teacher_id,class_id,stream_id,learning_area_id,academic_year_id,term_id,active').in('teacher_id',teacherIds).eq('active',true)
   assignments=subjectAssignments||[]
   if(profile?.role==='class_teacher'){
    const{data:classAssignments}=await s.from('class_teacher_assignments').select('id,teacher_id,class_id,stream_id,academic_year_id,term_id,active').eq('teacher_id',user.id).eq('active',true)
    assignments=[...assignments,...(classAssignments||[]).map((x:any)=>({...x,learning_area_id:null}))]
-   // A class-teacher assignment with no learning area grants marks-entry access
-   // to every active learning area for the assigned class/stream and term.
   }
  }
  const effectiveAssignments=assignments.filter((x:any)=>x.active!==false)
