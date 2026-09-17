@@ -1,7 +1,6 @@
 import{createClient}from'../../../lib/supabase/server'
 import ResultsEntry from './results-entry'
 import MeritList from './merit-list'
-import TeacherLeaveRequests from '../teachers/teacher-leave-requests'
 
 export async function ResultsWorkspace(){
  const s=await createClient();const{data:{user}}=await s.auth.getUser()
@@ -17,7 +16,6 @@ export async function ResultsWorkspace(){
  let assignments:any[]=[]
  const isTeacher=['class_teacher','subject_teacher'].includes(profile?.role||'')
  if(isTeacher&&user?.id){
-  // teacher_assignments.teacher_id stores staff.id; class_teacher_assignments.teacher_id stores profile.id.
   const{data:staff}=await s.from('staff').select('id').eq('profile_id',user.id).maybeSingle()
   const teacherIds=[user.id,...(staff?.id?[staff.id]:[])]
   const{data:subjectAssignments}=await s.from('teacher_assignments').select('id,teacher_id,class_id,stream_id,learning_area_id,academic_year_id,term_id,active').in('teacher_id',teacherIds).eq('active',true)
@@ -28,6 +26,6 @@ export async function ResultsWorkspace(){
   }
  }
  const effectiveAssignments=assignments.filter((x:any)=>x.active!==false)
- return <div>{isTeacher&&<TeacherLeaveRequests/>}<ResultsEntry role={profile?.role||''} students={students||[]} exams={exams||[]} areas={areas||[]} classes={classes||[]} streams={streams||[]} assignments={effectiveAssignments} marks={marks||[]}/><MeritList role={profile?.role||''} assignments={effectiveAssignments} students={students||[]} marks={marks||[]} exams={exams||[]} areas={areas||[]} classes={classes||[]} streams={streams||[]}/><section className="card"><h2>Results Centre</h2><div style={{overflowX:'auto'}}><table style={{width:'100%',borderCollapse:'collapse'}}><thead><tr>{['Student','Exam','Learning area','Marks','Max','Achievement','Remarks','Status'].map(h=><th key={h} style={{textAlign:'left',padding:10}}>{h}</th>)}</tr></thead><tbody>{marks?.length?marks.map((x:any)=><tr key={x.id}><td style={{padding:10}}>{students?.find(s=>s.id===x.student_id)?[students.find(s=>s.id===x.student_id)?.first_name,students.find(s=>s.id===x.student_id)?.middle_name,students.find(s=>s.id===x.student_id)?.last_name].filter(Boolean).join(' '):'—'}</td><td style={{padding:10}}>{exams?.find(e=>e.id===x.exam_id)?.name||'—'}</td><td style={{padding:10}}>{areas?.find(a=>a.id===x.learning_area_id)?.name||'—'}</td><td style={{padding:10}}>{x.achievement_level==='X'||x.achievement_level==='Y'?x.achievement_level:x.marks}</td><td style={{padding:10}}>{x.max_marks}</td><td style={{padding:10}}>{x.achievement_level||'—'}</td><td style={{padding:10}}>{x.remarks||'—'}</td><td style={{padding:10}}>{x.status}</td></tr>):<tr><td colSpan={8} className="muted" style={{padding:35,textAlign:'center'}}>No results entered yet.</td></tr>}</tbody></table></div></section></div>
+ return <div><ResultsEntry role={profile?.role||''} students={students||[]} exams={exams||[]} areas={areas||[]} classes={classes||[]} streams={streams||[]} assignments={effectiveAssignments} marks={marks||[]}/><MeritList role={profile?.role||''} assignments={effectiveAssignments} students={students||[]} marks={marks||[]} exams={exams||[]} areas={areas||[]} classes={classes||[]} streams={streams||[]}/><section className="card"><h2>Results Centre</h2><div style={{overflowX:'auto'}}><table style={{width:'100%',borderCollapse:'collapse'}}><thead><tr>{['Student','Exam','Learning area','Marks','Max','Achievement','Remarks','Status'].map(h=><th key={h} style={{textAlign:'left',padding:10}}>{h}</th>)}</tr></thead><tbody>{marks?.length?marks.map((x:any)=><tr key={x.id}><td style={{padding:10}}>{students?.find(s=>s.id===x.student_id)?[students.find(s=>s.id===x.student_id)?.first_name,students.find(s=>s.id===x.student_id)?.middle_name,students.find(s=>s.id===x.student_id)?.last_name].filter(Boolean).join(' '):'—'}</td><td style={{padding:10}}>{exams?.find(e=>e.id===x.exam_id)?.name||'—'}</td><td style={{padding:10}}>{areas?.find(a=>a.id===x.learning_area_id)?.name||'—'}</td><td style={{padding:10}}>{x.achievement_level==='X'||x.achievement_level==='Y'?x.achievement_level:x.marks}</td><td style={{padding:10}}>{x.max_marks}</td><td style={{padding:10}}>{x.achievement_level||'—'}</td><td style={{padding:10}}>{x.remarks||'—'}</td><td style={{padding:10}}>{x.status}</td></tr>):<tr><td colSpan={8} className="muted" style={{padding:35,textAlign:'center'}}>No results entered yet.</td></tr>}</tbody></table></div></section></div>
 }
 export default async function Page(){return <main className="main"><header className="top"><div><h1>Results & Report Forms</h1><p className="muted">CBC results, full class marks, automatic remarks, points, stream and overall positions.</p></div></header><ResultsWorkspace/></main>}
