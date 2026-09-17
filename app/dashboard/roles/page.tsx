@@ -24,106 +24,21 @@ const roles=[
 ] as const
 
 const areas=[
- ['Dashboard','School dashboard and role-based overview'],
- ['Students','Admissions, learner records, parent details, health, grade/stream and digital passport'],
- ['Student Parents & Portal','Parent links, portal code and parent-facing learner information'],
- ['Academic Setup','Academic years, terms, grades/classes, streams and CBC learning areas'],
- ['Exams & CBC Setup','Exams, learning areas, competencies, grading levels and assessment setup'],
- ['Marks Entry','Enter marks for assigned learners, subjects/learning areas and exams'],
- ['Edit Marks','Correct or update marks before publication'],
- ['X / Y Exam Status','Record X for not done/sat and Y for irregularity'],
- ['Automatic Grading','EE / ME / AE / BE grades and points'],
- ['Automatic Remarks','Generate learning-area/result remarks from recorded performance'],
- ['Class Results','Class results, stream positions, overall positions and report forms'],
- ['Merit List','Merit/class ranking and learner position reports'],
- ['Publish Results','Publish results for an assigned class after review'],
- ['Attendance','Student attendance and staff attendance records'],
- ['Timetable & Assignments','Class/stream teacher assignment, teacher workload and timetable'],
- ['Teacher Check-ins','Teacher check-in/check-out records and attendance visibility'],
- ['Leave / Off Requests','Submit leave, short leave and staff off requests'],
- ['Leave / Off Approval','Head Teacher/HR approval or rejection and decision comments'],
- ['Leave / Off Pay Decision','Approver chooses Paid or Unpaid after reviewing the request'],
- ['Leave / Off History PDF','Individual approved/rejected permission sheet PDF/Print'],
- ['Staff Signatures','Electronic staff signature on permission requests'],
- ['Approver Signatures','Electronic Head Teacher/HR signature after approval or rejection'],
- ['HR / Payroll','Staff, contracts, payroll, disciplinary records and payroll rules'],
- ['Finance & Fees','Fees/payments, receipts, balances, pending fees, statements and fee holds'],
- ['Budget & Planning','Income, fees, admissions/interview income, salaries, supplier invoices and other expenditure'],
- ['Petty Cash','Standalone petty cash, Week 1–4 reports, vouchers, money in/out and running balances'],
- ['Procurement','Requisitions, approvals, LPOs, job cards, suppliers and invoice/delivery workflow'],
- ['Inventory','Stock receiving/issuing, categories, minimum stock and low-stock alerts'],
- ['Transport','Trips, buses/routes, insurance, fuel, mileage, service/maintenance and payment controls'],
- ['Communications','Parent broadcast through configured WhatsApp/SMS/email/in-app channels'],
- ['School Intelligence','Operational and management intelligence dashboards'],
- ['Reports','Academic, finance, HR, transport, inventory, procurement and petty-cash reports'],
- ['School Settings','School configuration, branding and system settings'],
- ['User Management','Users, roles, teacher assignments and access management'],
- ['Audit Logs','Administrative audit visibility']
+ ['Dashboard','School dashboard and role-based overview'],['Students','Admissions, learner records, parent details, health, grade/stream and digital passport'],['Student Parents & Portal','Parent links, portal code and parent-facing learner information'],['Academic Setup','Academic years, terms, grades/classes, streams and CBC learning areas'],['Exams & CBC Setup','Exams, learning areas, competencies, grading levels and assessment setup'],['Marks Entry','Enter marks for assigned learners, subjects/learning areas and exams'],['Edit Marks','Correct or update marks before publication'],['X / Y Exam Status','Record X for not done/sat and Y for irregularity'],['Automatic Grading','EE / ME / AE / BE grades and points'],['Automatic Remarks','Generate learning-area/result remarks from recorded performance'],['Class Results','Class results, stream positions, overall positions and report forms'],['Merit List','Merit/class ranking and learner position reports'],['Publish Results','Publish results for an assigned class after review'],['Attendance','Student attendance and staff attendance records'],['Timetable & Assignments','Class/stream teacher assignment, teacher workload and timetable'],['Teacher Check-ins','Teacher check-in/check-out records and attendance visibility'],['Leave & Off','Dedicated Leave, Short Leave and Staff Off workspace'],['Leave / Off Approval','Head Teacher/HR approval or rejection and decision comments'],['Leave / Off Pay Decision','Approver chooses Paid or Unpaid after reviewing the request'],['Leave / Off History PDF','Individual approved/rejected permission sheet PDF/Print'],['Staff Signatures','Electronic staff signature on permission requests'],['Approver Signatures','Electronic Head Teacher/HR signature after approval or rejection'],['HR / Payroll','Staff, contracts, payroll, disciplinary records and payroll rules'],['Finance & Fees','Fees/payments, receipts, balances, pending fees, statements and fee holds'],['Budget & Planning','Income, fees, admissions/interview income, salaries, supplier invoices and other expenditure'],['Petty Cash','Standalone petty cash, Week 1–4 reports, vouchers, money in/out and running balances'],['Procurement','Requisitions, approvals, LPOs, job cards, suppliers and invoice/delivery workflow'],['Inventory','Stock receiving/issuing, categories, minimum stock and low-stock alerts'],['Transport','Trips, buses/routes, insurance, fuel, mileage, service/maintenance and payment controls'],['Communications','Parent broadcast through configured WhatsApp/SMS/email/in-app channels'],['School Intelligence','Operational and management intelligence dashboards'],['Reports','Academic, finance, HR, transport, inventory, procurement and petty-cash reports'],['School Settings','School configuration, branding and system settings'],['User Management','Users, roles, teacher assignments and access management'],['Audit Logs','Administrative audit visibility']
 ]
 
 const roleAreas:Record<string,string[]>= {
  super_admin:areas.map(a=>a[0]),
  admin:areas.map(a=>a[0]).filter(x=>!['Audit Logs'].includes(x)),
- headteacher:['Dashboard','Students','Student Parents & Portal','Academic Setup','Exams & CBC Setup','Marks Entry','Edit Marks','X / Y Exam Status','Automatic Grading','Automatic Remarks','Class Results','Merit List','Publish Results','Attendance','Timetable & Assignments','Teacher Check-ins','Leave / Off Approval','Leave / Off Pay Decision','Leave / Off History PDF','Approver Signatures','HR / Payroll','Finance & Fees','Budget & Planning','School Intelligence','Reports'],
- deputy_headteacher:['Dashboard','Students','Student Parents & Portal','Academic Setup','Exams & CBC Setup','Marks Entry','Edit Marks','X / Y Exam Status','Automatic Grading','Automatic Remarks','Class Results','Merit List','Publish Results','Attendance','Timetable & Assignments','Teacher Check-ins','Leave / Off Requests','Leave / Off History PDF','Approver Signatures','Reports','School Intelligence'],
+ headteacher:['Dashboard','Students','Student Parents & Portal','Academic Setup','Exams & CBC Setup','Marks Entry','Edit Marks','X / Y Exam Status','Automatic Grading','Automatic Remarks','Class Results','Merit List','Publish Results','Attendance','Timetable & Assignments','Teacher Check-ins','Leave & Off','Leave / Off Approval','Leave / Off Pay Decision','Leave / Off History PDF','Approver Signatures','HR / Payroll','Finance & Fees','Budget & Planning','School Intelligence','Reports'],
+ deputy_headteacher:['Dashboard','Students','Student Parents & Portal','Academic Setup','Exams & CBC Setup','Marks Entry','Edit Marks','X / Y Exam Status','Automatic Grading','Automatic Remarks','Class Results','Merit List','Publish Results','Attendance','Timetable & Assignments','Teacher Check-ins','Leave & Off','Leave / Off History PDF','Approver Signatures','Reports','School Intelligence'],
  academic:['Dashboard','Students','Student Parents & Portal','Academic Setup','Exams & CBC Setup','Marks Entry','Edit Marks','X / Y Exam Status','Automatic Grading','Automatic Remarks','Class Results','Merit List','Publish Results','Attendance','Timetable & Assignments','Reports','School Intelligence'],
- class_teacher:['Dashboard','Students','Student Parents & Portal','Exams & CBC Setup','Marks Entry','Edit Marks','X / Y Exam Status','Automatic Grading','Automatic Remarks','Class Results','Merit List','Publish Results','Attendance','Timetable & Assignments','Teacher Check-ins','Leave / Off Requests','Leave / Off History PDF','Staff Signatures','Reports'],
- subject_teacher:['Dashboard','Students','Student Parents & Portal','Exams & CBC Setup','Marks Entry','Edit Marks','X / Y Exam Status','Automatic Grading','Automatic Remarks','Class Results','Attendance','Timetable & Assignments','Teacher Check-ins','Leave / Off Requests','Leave / Off History PDF','Staff Signatures','Reports'],
- finance:['Dashboard','Students','Finance & Fees','Budget & Planning','School Intelligence','Reports'],
- bursar:['Dashboard','Students','Finance & Fees','Reports'],
- accountant:['Dashboard','Students','Finance & Fees','Budget & Planning','School Intelligence','Reports'],
- petty_cash:['Dashboard','Petty Cash','Reports'],
- hr_admin:['Dashboard','Students','HR / Payroll','Attendance','Teacher Check-ins','Leave / Off Requests','Leave / Off Approval','Leave / Off Pay Decision','Leave / Off History PDF','Staff Signatures','Approver Signatures','Reports'],
- hr:['Dashboard','Students','HR / Payroll','Attendance','Teacher Check-ins','Leave / Off Requests','Leave / Off Approval','Leave / Off Pay Decision','Leave / Off History PDF','Staff Signatures','Approver Signatures','Reports'],
- operations:['Dashboard','Procurement','Inventory','Transport','Timetable & Assignments','Communications','School Intelligence','Reports'],
- procurement_officer:['Dashboard','Procurement','Inventory','Reports'],
- procurement:['Dashboard','Procurement','Inventory','Reports'],
- storekeeper:['Dashboard','Inventory','Procurement','Reports'],
- inventory:['Dashboard','Inventory','Procurement','Reports'],
- transport_manager:['Dashboard','Transport','Reports'],
- board:['Dashboard','School Intelligence','Reports']
+ class_teacher:['Dashboard','Students','Student Parents & Portal','Exams & CBC Setup','Marks Entry','Edit Marks','X / Y Exam Status','Automatic Grading','Automatic Remarks','Class Results','Merit List','Publish Results','Attendance','Timetable & Assignments','Teacher Check-ins','Leave & Off','Leave / Off History PDF','Staff Signatures','Reports'],
+ subject_teacher:['Dashboard','Students','Student Parents & Portal','Exams & CBC Setup','Marks Entry','Edit Marks','X / Y Exam Status','Automatic Grading','Automatic Remarks','Class Results','Attendance','Timetable & Assignments','Teacher Check-ins','Leave & Off','Leave / Off History PDF','Staff Signatures','Reports'],
+ finance:['Dashboard','Students','Finance & Fees','Budget & Planning','School Intelligence','Reports'],bursar:['Dashboard','Students','Finance & Fees','Reports'],accountant:['Dashboard','Students','Finance & Fees','Budget & Planning','School Intelligence','Reports'],petty_cash:['Dashboard','Petty Cash','Reports'],
+ hr_admin:['Dashboard','Students','HR / Payroll','Attendance','Teacher Check-ins','Leave & Off','Leave / Off Approval','Leave / Off Pay Decision','Leave / Off History PDF','Staff Signatures','Approver Signatures','Reports'],hr:['Dashboard','Students','HR / Payroll','Attendance','Teacher Check-ins','Leave & Off','Leave / Off Approval','Leave / Off Pay Decision','Leave / Off History PDF','Staff Signatures','Approver Signatures','Reports'],
+ operations:['Dashboard','Procurement','Inventory','Transport','Timetable & Assignments','Communications','School Intelligence','Reports'],procurement_officer:['Dashboard','Procurement','Inventory','Reports'],procurement:['Dashboard','Procurement','Inventory','Reports'],storekeeper:['Dashboard','Inventory','Procurement','Reports'],inventory:['Dashboard','Inventory','Procurement','Reports'],transport_manager:['Dashboard','Transport','Reports'],board:['Dashboard','School Intelligence','Reports']
 }
-
 const label=(r:string)=>roles.find(x=>x[0]===r)?.[1]||r
 const norm=(r:string)=>String(r||'').trim().toLowerCase().replace(/[\s-]+/g,'_')
-
-export default async function Roles(){
- const s=await createClient()
- const {data}=await s.from('profiles').select('id,full_name,role,status').order('full_name')
- return <main className="main">
-  <header className="top"><div><h1>Roles & Access</h1><p className="muted">Detailed role map for the ERP. Individual permissions are shown instead of hiding them inside broad module names.</p></div></header>
-
-  <section className="card">
-   <h2>System roles</h2>
-   <div className="cards">{roles.map(r=><div className="card" key={r[0]}><strong>{r[1]}</strong><p className="muted" style={{marginBottom:8}}>{r[2]}</p><small className="muted">Role key: {r[0]}</small></div>)}</div>
-  </section>
-
-  <section className="card" style={{marginTop:16}}>
-   <h2>Detailed permission matrix</h2>
-   <p className="muted">✓ means the role can use that function. Class and Subject Teachers remain limited to their assigned classes, streams and learning areas.</p>
-   <div style={{overflowX:'auto'}}><table style={{width:'100%',borderCollapse:'collapse',minWidth:1900}}>
-    <thead><tr><th style={{textAlign:'left',padding:10,position:'sticky',left:0,background:'inherit',zIndex:2}}>Role</th>{areas.map(a=><th key={a[0]} title={a[1]} style={{padding:8,fontSize:10,whiteSpace:'nowrap',writingMode:'vertical-rl',transform:'rotate(180deg)',height:170}}>{a[0]}</th>)}</tr></thead>
-    <tbody>{roles.map(r=>{const allowed=roleAreas[r[0]]||[];return <tr key={r[0]}><td style={{padding:10,whiteSpace:'nowrap',position:'sticky',left:0,background:'inherit',zIndex:1}}><strong>{r[1]}</strong></td>{areas.map(a=><td key={a[0]} style={{textAlign:'center',padding:8,fontSize:16}}>{allowed.includes(a[0])?'✓':'—'}</td>)}</tr>})}</tbody>
-   </table></div>
-  </section>
-
-  <section className="card" style={{marginTop:16}}>
-   <h2>Key role rules</h2>
-   <div className="cards">
-    <div className="card"><strong>Marks Entry</strong><p className="muted">Class Teachers and Subject Teachers can enter and edit marks for their assigned learners/learning areas. Academic, Deputy Head Teacher and Head Teacher have academic oversight.</p></div>
-    <div className="card"><strong>Results</strong><p className="muted">EE, ME, AE and BE are used for grading. X records a learner who did not do/sit the exam and Y records an irregularity. Remarks, points and positions are generated from recorded results.</p></div>
-    <div className="card"><strong>Leave / Off</strong><p className="muted">Staff submit their request and electronic signature. Short Leave/Leave is handled through the Head Teacher route; Staff Off is handled through HR. The approver chooses Paid or Unpaid and signs the final decision.</p></div>
-    <div className="card"><strong>Finance</strong><p className="muted">Finance/Bursar/Accountant access is separated by role. Pay status for leave is a decision made by the appropriate approver, not by the teacher submitting the request.</p></div>
-    <div className="card"><strong>Procurement & Inventory</strong><p className="muted">Procurement handles requisitions, approvals, LPOs and supplier workflows. Inventory/Storekeeper handles stock control and low-stock operations.</p></div>
-    <div className="card"><strong>Teacher scope</strong><p className="muted">Teacher permissions do not mean access to every learner. The system should scope marks, attendance and learner records to assigned classes, streams and learning areas.</p></div>
-   </div>
-  </section>
-
-  <section className="card" style={{marginTop:16}}>
-   <h2>Current users</h2>
-   <div style={{overflowX:'auto'}}><table style={{width:'100%',borderCollapse:'collapse'}}><thead><tr><th style={{textAlign:'left',padding:10}}>Name</th><th style={{textAlign:'left',padding:10}}>Role</th><th style={{textAlign:'left',padding:10}}>Status</th></tr></thead>
-    <tbody>{data?.length?data.map((u:any)=><tr key={u.id}><td style={{padding:10}}>{u.full_name||'—'}</td><td style={{padding:10}}>{label(norm(u.role))}</td><td style={{padding:10}}>{u.status||'—'}</td></tr>):<tr><td colSpan={3} className="muted" style={{padding:30,textAlign:'center'}}>No users yet.</td></tr>}</tbody>
-   </table></div>
-  </section>
- </main>
-}
+export default async function Roles(){const s=await createClient();const{data}=await s.from('profiles').select('id,full_name,role,status').order('full_name');return <main className="main"><header className="top"><div><h1>Roles & Access</h1><p className="muted">Individual permissions drive visibility. Marks Entry and Leave & Off are separate permissions and pages.</p></div></header><section className="card"><h2>System roles</h2><div className="cards">{roles.map(r=><div className="card" key={r[0]}><strong>{r[1]}</strong><p className="muted" style={{marginBottom:8}}>{r[2]}</p><small className="muted">Role key: {r[0]}</small></div>)}</div></section><section className="card" style={{marginTop:16}}><h2>Detailed permission matrix</h2><p className="muted">✓ means the role can use that function. Teachers remain limited to assigned classes, streams and learning areas.</p><div style={{overflowX:'auto'}}><table style={{width:'100%',borderCollapse:'collapse',minWidth:1900}}><thead><tr><th style={{textAlign:'left',padding:10,position:'sticky',left:0,background:'inherit',zIndex:2}}>Role</th>{areas.map(a=><th key={a[0]} title={a[1]} style={{padding:8,fontSize:10,whiteSpace:'nowrap',writingMode:'vertical-rl',transform:'rotate(180deg)',height:170}}>{a[0]}</th>)}</tr></thead><tbody>{roles.map(r=>{const allowed=roleAreas[r[0]]||[];return <tr key={r[0]}><td style={{padding:10,whiteSpace:'nowrap',position:'sticky',left:0,background:'inherit',zIndex:1}}><strong>{r[1]}</strong></td>{areas.map(a=><td key={a[0]} style={{textAlign:'center',padding:8,fontSize:16}}>{allowed.includes(a[0])?'✓':'—'}</td>)}</tr>})}</tbody></table></div></section><section className="card" style={{marginTop:16}}><h2>Key role rules</h2><div className="cards"><div className="card"><strong>Marks Entry</strong><p className="muted">Class Teachers and Subject Teachers can enter/edit marks for their assigned learners and learning areas. The dashboard shows Exams & Marks when either exam viewing or marks.entry is granted.</p></div><div className="card"><strong>Leave & Off</strong><p className="muted">Leave and Short Leave route to Head Teacher. Staff Off routes to HR. Requesters sign electronically; the approver alone chooses Paid/Unpaid and signs the decision.</p></div><div className="card"><strong>Teacher scope</strong><p className="muted">Marks, attendance and learner records remain assignment-scoped; a role does not automatically expose every learner.</p></div></div></section><section className="card" style={{marginTop:16}}><h2>Current users</h2><div style={{overflowX:'auto'}}><table style={{width:'100%',borderCollapse:'collapse'}}><thead><tr><th style={{textAlign:'left',padding:10}}>Name</th><th style={{textAlign:'left',padding:10}}>Role</th><th style={{textAlign:'left',padding:10}}>Status</th></tr></thead><tbody>{data?.length?data.map((u:any)=><tr key={u.id}><td style={{padding:10}}>{u.full_name||'—'}</td><td style={{padding:10}}>{label(norm(u.role))}</td><td style={{padding:10}}>{u.status||'—'}</td></tr>):<tr><td colSpan={3} className="muted" style={{padding:30,textAlign:'center'}}>No users yet.</td></tr>}</tbody></table></div></section></main>}
