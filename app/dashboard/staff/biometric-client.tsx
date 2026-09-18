@@ -13,7 +13,7 @@ function eyeAspectRatio(eye:any[]){if(!eye||eye.length<6)return 0;const vertical
 async function requireTwoBlinks(video:HTMLVideoElement,setStatus:(message:string)=>void){
  const api=window.faceapi;if(!api)throw new Error('Face recognition is still loading.')
  const started=Date.now(),samples:number[]=[];let calibrated=false,closed=false,blinks=0,lastBlink=0,lastDescriptor:number[]|null=null
- setStatus('Look at the camera and blink twice naturally. This prevents a still photo from being used.')
+ setStatus('Blink twice naturally to verify that you are live.')
  while(Date.now()-started<10000){
   const result=await api.detectSingleFace(video,new api.TinyFaceDetectorOptions({inputSize:320,scoreThreshold:.55})).withFaceLandmarks(true).withFaceDescriptor()
   if(result){
