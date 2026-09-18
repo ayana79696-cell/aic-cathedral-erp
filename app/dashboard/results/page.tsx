@@ -13,7 +13,7 @@ export async function ResultsWorkspace(){
  }else{
   const q=await Promise.all([
    s.from('students').select('id,admission_number,first_name,middle_name,last_name,class_id,stream_id,status').eq('status','active').order('last_name'),
-   s.from('exams').select('id,name,academic_year_id,term_id,max_marks,status').neq('status','archived').order('start_date',{ascending:false}),
+   s.from('exams').select('id,name,academic_year_id,term_id,max_marks,status,start_date').neq('status','archived').order('start_date',{ascending:false}),
    s.from('learning_areas').select('id,name').eq('active',true).order('name'),
    s.from('classes').select('id,name').eq('status','active').order('name'),
    s.from('streams').select('id,class_id,name').eq('status','active').order('name'),
