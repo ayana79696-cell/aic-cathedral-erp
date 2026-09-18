@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '../../../lib/supabase/client'
 
-type Parent={id:string;name:string;phone?:string|null;email?:string|null}
+type Parent={id:string;name:string;phone?:string|null;email?:string|null;status?:string|null}
 type Student={id:string;first_name:string;last_name:string;admission_number?:string|null;class_id:string|null;stream_id:string|null;classes?:{name?:string}[]|null;streams?:{name?:string}[]|null;student_parents?:{parent_id:string;primary_guardian?:boolean;parents?:Parent[]|null}[]}
 type Recipient=Parent&{student:string;grade:string;stream:string}
 
@@ -17,7 +17,7 @@ const templates=[
 
 export default function Broadcast(){
  const db=createClient();const [tab,setTab]=useState<'send'|'templates'|'integrations'>('send');const [students,setStudents]=useState<Student[]>([]);const [channel,setChannel]=useState('sms');const [audience,setAudience]=useState('all');const [message,setMessage]=useState('Dear parent, this is a reminder about the upcoming PTA meeting on 12th June 2026 at the school hall. AIC Cathedral.');const [subject,setSubject]=useState('');const [status,setStatus]=useState('');const [api,setApi]=useState<ApiConfig>({api_base_url:'https://graph.facebook.com/v23.0',sender_name:'AIC Cathedral',sender_id:'',enabled:false});const [channels,setChannels]=useState({sms:true,whatsapp:true,email:true,inApp:false});const [saving,setSaving]=useState(false)
- useEffect(()=>{(async()=>{const{data}=await db.from('students').select('id,first_name,last_name,class_id,stream_id,classes(name),streams(name),student_parents(parent_id,primary_guardian,parents(id,name,phone,email))').eq('status','active').order('first_name');setStudents((data||[]) as unknown as Student[]);const{data:settings}=await db.from('communication_settings').select('api_base_url,sender_name,sender_id,enabled').eq('provider','whatsapp').maybeSingle();if(settings)setApi(settings as ApiConfig);try{const saved=localStorage.getItem('aic-communication-channels');if(saved)setChannels(JSON.parse(saved))}catch{}})()},[])
+ useEffect(()=>{(async()=>{const{data}=await db.from('students').select('id,first_name,last_name,class_id,stream_id,classes(name),streams(name),student_parents(parent_id,primary_guardian,parents(id,name,phone,email,status))').eq('status','active').order('first_name');setStudents((data||[]) as unknown as Student[]);const{data:settings}=await db.from('communication_settings').select('api_base_url,sender_name,sender_id,enabled').eq('provider','whatsapp').maybeSingle();if(settings)setApi(settings as ApiConfig);try{const saved=localStorage.getItem('aic-communication-channels');if(saved)setChannels(JSON.parse(saved))}catch{}})()},[])
  const [gradeFilter,setGradeFilter]=useState('all');const [streamFilter,setStreamFilter]=useState('all');const [studentSearch,setStudentSearch]=useState('');const [selectedStudentIds,setSelectedStudentIds]=useState<string[]>([]);const [singlePhone,setSinglePhone]=useState('');const [singleName,setSingleName]=useState('')
  const grades=useMemo(()=>Array.from(new Set(students.map(s=>s.classes?.[0]?.name).filter(Boolean) as string[])).sort(),[students])
  const streams=useMemo(()=>Array.from(new Set(students.map(s=>s.streams?.[0]?.name).filter(Boolean) as string[])).sort(),[students])
