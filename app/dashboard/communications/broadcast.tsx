@@ -28,7 +28,7 @@ export default function Broadcast(){
  function toggleStudent(id:string){setSelectedStudentIds(v=>v.includes(id)?v.filter(x=>x!==id):[...v,id])}
  function toggleVisible(){const ids=visibleStudents.map(s=>s.id);const all=ids.length>0&&ids.every(id=>selectedStudentIds.includes(id));setSelectedStudentIds(v=>all?v.filter(id=>!ids.includes(id)):Array.from(new Set([...v,...ids])))}
  function normalizePhone(v:string){const x=v.trim().replace(/[\s()-]/g,'');if(/^0[17]\d{8}$/.test(x))return '+254'+x.slice(1);if(/^254[17]\d{8}$/.test(x))return '+'+x;if(/^\+254[17]\d{8}$/.test(x))return x;return null}
- const recipients=useMemo<Recipient[]>(()=>students.flatMap(s=>(s.student_parents||[]).map(x=>{const p=x.parents?.[0];return p?{...p,student:`${s.first_name} ${s.last_name}`,grade:s.classes?.[0]?.name||'',stream:s.streams?.[0]?.name||''}:null}).filter((x):x is Recipient=>!!x)),[students])
+ const recipients=useMemo<Recipient[]>(()=>students.flatMap(s=>(s.student_parents||[]).map(x=>{const p=x.parents?.[0];return p&&String(p.status||'active')==='active'&&p.phone?{...p,student:`${s.first_name} ${s.last_name}`,grade:s.classes?.[0]?.name||'',stream:s.streams?.[0]?.name||''}:null}).filter((x):x is Recipient=>!!x)),[students])
  const filteredRecipients=recipientCount
  const recipientTotal=recipientCount.length
 
