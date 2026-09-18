@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import {Children, cloneElement, isValidElement, useState} from 'react'
+import {Children, cloneElement, isValidElement, useEffect, useState} from 'react'
 
 export type PrototypeKpi = { label: string; value: string | number; note?: string; tone?: 'navy'|'green'|'blue'|'red'|'yellow' }
 type TabChildProps = { id?: string; [key:string]: unknown }
@@ -9,6 +9,7 @@ type TabChildProps = { id?: string; [key:string]: unknown }
 export function PrototypePage({ title, subtitle, action, kpis = [], tabs = [], children }: { title:string; subtitle:string; action?:React.ReactNode; kpis?:PrototypeKpi[]; tabs?:[string,string][]; children:React.ReactNode }) {
  const [selected,setSelected]=useState(tabs[0]?.[0]?.replace(/^#/,'')||'')
  const tabIds=new Set(tabs.map(([href])=>href.replace(/^#/,'')))
+ useEffect(()=>{const handler=(e:Event)=>{const id=(e as CustomEvent).detail?.id;if(typeof id==='string'&&tabIds.has(id))setSelected(id)};window.addEventListener('prototype:select',handler);return()=>window.removeEventListener('prototype:select',handler)},[tabs])
  const content=Children.map(children,child=>{
   if(!isValidElement<TabChildProps>(child)) return child
   const id=typeof child.props.id==='string'?child.props.id:''
