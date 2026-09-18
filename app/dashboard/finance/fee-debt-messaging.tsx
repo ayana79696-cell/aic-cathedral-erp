@@ -27,8 +27,10 @@ export default function FeeDebtMessaging({students,accounts}:{students:Student[]
   setParents(map)
  }
  const rows=useMemo(()=>students.map(s=>{
-  const a=accounts.find(x=>x.student_id===s.id)
-  const due=Number(a?.amount_due||0),paid=Number(a?.amount_paid||0),balance=Math.max(due-paid,0)
+  const studentAccounts=accounts.filter(x=>x.student_id===s.id)
+  const due=studentAccounts.reduce((sum,x)=>sum+Number(x.amount_due||0),0)
+  const paid=studentAccounts.reduce((sum,x)=>sum+Number(x.amount_paid||0),0)
+  const balance=Math.max(due-paid,0)
   const linked=(parents[s.id]||[]).filter(p=>p.status==='active')
   const primary=linked.find(p=>p.primary)||linked.find(p=>!!p.phone)||linked[0]
   return{...s,due,paid,balance,parent:primary||null}
