@@ -284,4 +284,10 @@ class MainActivity : Activity() {
         loadSims()
         refreshQueue()
     }
+
+    override fun onDestroy() {
+        handler.removeCallbacks(queueLoop)
+        if (MainActivityHolder.activity === this) MainActivityHolder.activity = null
+        super.onDestroy()
+    }
 }
