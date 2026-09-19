@@ -11,7 +11,7 @@ import android.widget.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity {\n    static MainActivity instance;
     static final int REQ_SMS=41;
     LinearLayout root, list;
     EditText message;
@@ -126,6 +126,6 @@ public class MainActivity extends Activity {
             if(sent+failed>=total){sending=false;send.setEnabled(true); summary.setText("Finished • Sent "+sent+" • Failed "+failed+" • Delivered "+delivered+" / "+total);}
         });
     }
-    void toast(String s){Toast.makeText(this,s,Toast.LENGTH_SHORT).show();}
+    @Override protected void onDestroy(){ super.onDestroy(); if(instance==this) instance=null; }\n    void toast(String s){Toast.makeText(this,s,Toast.LENGTH_SHORT).show();}
     static class Contact{String name,phone; Contact(String n,String p){name=n;phone=p;}}
 }
