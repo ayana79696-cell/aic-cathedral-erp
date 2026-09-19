@@ -29,6 +29,7 @@ class MainActivity : Activity() {
     private var sent = 0
     private var failed = 0
     private var total = 0
+    private val queueLoop = object : Runnable { override fun run() { if (!sending) refreshQueue(); handler.postDelayed(this, 3000) } }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,6 +40,7 @@ class MainActivity : Activity() {
         loadSims()
         startService()
         refreshQueue()
+        handler.postDelayed(queueLoop, 3000)
     }
 
     private fun buildUi() {
