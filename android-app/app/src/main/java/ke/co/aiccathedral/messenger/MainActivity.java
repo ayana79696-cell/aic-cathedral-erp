@@ -88,8 +88,8 @@ public class MainActivity extends Activity {
         String body=message.getText().toString().trim();
         if(contacts.isEmpty()){toast("Add at least one parent.");return;}
         if(body.isEmpty()){toast("Enter a message.");return;}
-        if(body.length()>160){new AlertDialog.Builder(this).setMessage("This SMS is longer than 160 characters and may be sent as multiple SMS parts. Continue?").setPositiveButton("Send", (d,w)->sendBatch(body)).setNegativeButton("Cancel",null).show();}
-        else sendBatch(body);
+        if(body.length()>160){ toast("Please keep the SMS at 160 characters or less."); return; }
+        sendBatch(body);
     }
     void sendBatch(String body){
         if(Build.VERSION.SDK_INT>=23 && checkSelfPermission(Manifest.permission.SEND_SMS)!=PackageManager.PERMISSION_GRANTED){requestPermissions(new String[]{Manifest.permission.SEND_SMS},REQ_SMS);return;}
@@ -112,9 +112,7 @@ public class MainActivity extends Activity {
             int flags=Build.VERSION.SDK_INT>=23?PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE:PendingIntent.FLAG_UPDATE_CURRENT;
             PendingIntent sp=PendingIntent.getBroadcast(this,1000+index,si,flags);
             PendingIntent dp=PendingIntent.getBroadcast(this,2000+index,di,flags);
-            ArrayList<String> parts=mgr.divideMessage(body);
-            if(parts.size()==1) mgr.sendTextMessage(phone,null,body,sp,dp);
-            else mgr.sendMultipartTextMessage(phone,null,parts,Collections.singletonList(sp),Collections.singletonList(dp));
+            mgr.sendTextMessage(phone,null,body,sp,dp);
         }catch(Exception e){failed++;updateSummary();}
     }
     void onSent(boolean ok,String phone){
