@@ -1,11 +1,19 @@
 package ke.aiccathedral.schoolmessenger
+
 import android.content.Context
+
 object Config {
- private const val P="aic_messenger"; private const val E="endpoint"; private const val T="device_token"
- private const val D="https://rmarersocrwzqhnbuygi.supabase.co/functions/v1/school-phone-sms"
- fun endpoint(c:Context)=c.getSharedPreferences(P,0).getString(E,D)?:D
- fun token(c:Context)=c.getSharedPreferences(P,0).getString(T,"")?:""
- fun save(c:Context,e:String,t:String)=c.getSharedPreferences(P,0).edit().putString(E,e.trim()).putString(T,t.trim()).apply()
- fun setLastStatus(c:Context,s:String)=c.getSharedPreferences(P,0).edit().putString("last_status",s).apply()
- fun lastStatus(c:Context)=c.getSharedPreferences(P,0).getString("last_status","Ready")?:"Ready"
+    private const val PREFS = "aic_messenger"
+    private const val ENDPOINT = "https://rmarersocrwzqhnbuygi.supabase.co/functions/v1/school-phone-sms"
+    private const val DEVICE_TOKEN = "hVgtknd5WD3WHTiO0M2EJnsjR9bfPmCcTQ92AvmEIBI"
+
+    fun endpoint(c: Context): String = ENDPOINT
+    fun token(c: Context): String = DEVICE_TOKEN
+
+    fun setLastStatus(c: Context, status: String) {
+        c.getSharedPreferences(PREFS, 0).edit().putString("last_status", status).apply()
+    }
+
+    fun lastStatus(c: Context): String =
+        c.getSharedPreferences(PREFS, 0).getString("last_status", "Ready") ?: "Ready"
 }
