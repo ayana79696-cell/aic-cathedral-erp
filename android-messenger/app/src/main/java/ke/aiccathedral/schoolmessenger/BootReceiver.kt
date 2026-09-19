@@ -1,4 +1,14 @@
 package ke.aiccathedral.schoolmessenger
-import android.content.*
+
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
 import android.os.Build
-class BootReceiver:BroadcastReceiver(){override fun onReceive(c:Context,i:Intent){if(i.action!=Intent.ACTION_BOOT_COMPLETED&&i.action!=Intent.ACTION_MY_PACKAGE_REPLACED)return;if(Config.token(c).isBlank())return;val s=Intent(c,SmsPollingService::class.java);if(Build.VERSION.SDK_INT>=26)c.startForegroundService(s)else c.startService(s)}}
+
+class BootReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action != Intent.ACTION_BOOT_COMPLETED && intent.action != Intent.ACTION_MY_PACKAGE_REPLACED) return
+        val service = Intent(context, SmsPollingService::class.java)
+        if (Build.VERSION.SDK_INT >= 26) context.startForegroundService(service) else context.startService(service)
+    }
+}
