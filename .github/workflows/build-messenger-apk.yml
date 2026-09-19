@@ -1,4 +1,5 @@
 name: Build AIC School Messenger APK
+# Rebuild after Java source fixes
 on:
   push:
     paths:
