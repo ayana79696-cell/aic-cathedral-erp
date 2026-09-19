@@ -1,7 +1,7 @@
 name: Build AIC School Messenger APK
 # Rebuild after Java source fixes
 # Final compile check
-# Rebuild after SMS compile fix
+# Rebuild after ERP integration
 on:
   push:
     paths:
