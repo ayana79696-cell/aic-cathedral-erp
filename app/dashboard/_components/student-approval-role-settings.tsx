@@ -1,7 +1,7 @@
 'use client'
 
 import {useEffect,useState} from 'react'
-import {createClient} from '../../lib/supabase/client'
+import {createClient} from '../../../lib/supabase/client'
 
 const roles=[
  ['super_admin','Super Admin'],['admin','Admin'],['headteacher','Head Teacher'],['deputy_headteacher','Deputy Head Teacher'],
