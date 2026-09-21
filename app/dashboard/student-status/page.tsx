@@ -69,7 +69,27 @@ export default function StudentStatus(){
  const printStudent=printRow?selectedStudent(printRow):null
 
  return <main className="main">
-  <style jsx>{".print-document{display:none}@media print{body *{visibility:hidden!important}.print-document,.print-document *{visibility:visible!important}.print-document{display:block!important;position:absolute;left:0;top:0;width:100%;padding:28px 38px;font-family:Arial,sans-serif;color:#111;background:#fff}.print-header{text-align:center;border-bottom:2px solid #111;padding-bottom:12px;margin-bottom:20px}.print-header h1{margin:0;font-size:22px}.print-header p{margin:4px 0;font-size:12px}.print-title{text-align:center;font-size:18px;font-weight:700;text-transform:uppercase;margin:18px 0}.print-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #222}.print-cell{padding:9px;border-right:1px solid #222;border-bottom:1px solid #222;min-height:38px}.print-cell:nth-child(2n){border-right:0}.print-label{font-size:10px;text-transform:uppercase;color:#555;font-weight:700}.print-value{font-size:13px;margin-top:4px}.print-reason{border:1px solid #222;border-top:0;padding:12px;min-height:100px}.print-signatures{display:grid;grid-template-columns:1fr 1fr;gap:50px;margin-top:55px}.print-sign{border-top:1px solid #111;padding-top:7px;font-size:12px;min-height:60px}.print-note{margin-top:28px;font-size:11px}}"}  .signature-image{max-width:260px;max-height:80px;display:block;margin:8px 0}.print-signatures{align-items:start}.print-sign{min-height:110px}\n</style>
+   <style jsx>{`
+.print-document{display:none}
+@media print{
+ body *{visibility:hidden!important}
+ .print-document,.print-document *{visibility:visible!important}
+ .print-document{display:block!important;position:absolute;left:0;top:0;width:100%;padding:28px 38px;font-family:Arial,sans-serif;color:#111;background:#fff}
+ .print-header{text-align:center;border-bottom:2px solid #111;padding-bottom:12px;margin-bottom:20px}
+ .print-header h1{margin:0;font-size:22px}.print-header p{margin:4px 0;font-size:12px}
+ .print-title{text-align:center;font-size:18px;font-weight:700;text-transform:uppercase;margin:18px 0}
+ .print-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #222}
+ .print-cell{padding:9px;border-right:1px solid #222;border-bottom:1px solid #222;min-height:38px}
+ .print-cell:nth-child(2n){border-right:0}
+ .print-label{font-size:10px;text-transform:uppercase;color:#555;font-weight:700}
+ .print-value{font-size:13px;margin-top:4px}
+ .print-reason{border:1px solid #222;border-top:0;padding:12px;min-height:100px}
+ .print-signatures{display:grid;grid-template-columns:1fr 1fr;gap:50px;margin-top:55px;align-items:start}
+ .print-sign{border-top:1px solid #111;padding-top:7px;font-size:12px;min-height:110px}
+ .print-note{margin-top:28px;font-size:11px}
+ .signature-image{max-width:260px;max-height:80px;display:block;margin:8px 0}
+}
+`}</style>
 
   <header className="top"><div><h1>Student Leave & Suspension</h1><p className="muted">Request, approve, digitally sign and print official learner leave and suspension forms.</p></div></header>
   <section className="prototype-kpis">
