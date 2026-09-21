@@ -58,6 +58,15 @@ grant select,insert,update,delete on public.student_approval_roles to authentica
 grant select,insert,update on public.student_leave_requests to authenticated;
 grant select,insert,update on public.student_suspension_requests to authenticated;
 
+drop policy if exists student_approval_roles_select on public.student_approval_roles;
+drop policy if exists student_approval_roles_write on public.student_approval_roles;
+drop policy if exists student_leave_select on public.student_leave_requests;
+drop policy if exists student_leave_insert on public.student_leave_requests;
+drop policy if exists student_leave_update on public.student_leave_requests;
+drop policy if exists student_suspension_select on public.student_suspension_requests;
+drop policy if exists student_suspension_insert on public.student_suspension_requests;
+drop policy if exists student_suspension_update on public.student_suspension_requests;
+
 create policy student_approval_roles_select on public.student_approval_roles for select to authenticated using (true);
 create policy student_approval_roles_write on public.student_approval_roles for all to authenticated
 using (public.current_role() = 'super_admin'::public.user_role)
@@ -101,6 +110,9 @@ create or replace function public.touch_student_status_request_updated_at()
 returns trigger language plpgsql as $$
 begin new.updated_at=now(); return new; end;
 $$;
+
+drop trigger if exists student_leave_updated_at on public.student_leave_requests;
+drop trigger if exists student_suspension_updated_at on public.student_suspension_requests;
 
 create trigger student_leave_updated_at before update on public.student_leave_requests
 for each row execute function public.touch_student_status_request_updated_at();
