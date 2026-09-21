@@ -84,7 +84,7 @@ create policy student_leave_update on public.student_leave_requests for update t
  exists(select 1 from public.student_approval_roles ar where ar.request_type='leave' and ar.enabled and ar.role=public.current_role()) or
  requested_by=(select auth.uid())
 ) with check (
- public.current_role()=any(array['super_admin','admin']::public.user_role[]) or
+ public.current_role()='super_admin'::public.user_role or
  exists(select 1 from public.student_approval_roles ar where ar.request_type='leave' and ar.enabled and ar.role=public.current_role()) or
  requested_by=(select auth.uid())
 );
@@ -101,7 +101,7 @@ create policy student_suspension_update on public.student_suspension_requests fo
  exists(select 1 from public.student_approval_roles ar where ar.request_type='suspension' and ar.enabled and ar.role=public.current_role()) or
  requested_by=(select auth.uid())
 ) with check (
- public.current_role()=any(array['super_admin','admin']::public.user_role[]) or
+ public.current_role()='super_admin'::public.user_role or
  exists(select 1 from public.student_approval_roles ar where ar.request_type='suspension' and ar.enabled and ar.role=public.current_role()) or
  requested_by=(select auth.uid())
 );
