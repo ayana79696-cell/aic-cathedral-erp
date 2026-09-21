@@ -15,7 +15,7 @@ export default function StudentStatus(){
  const[leave,setLeave]=useState<RequestRow[]>([]);const[susp,setSusp]=useState<RequestRow[]>([]);const[approvalRoles,setApprovalRoles]=useState<any[]>([]);const[people,setPeople]=useState<Record<string,Person>>({})
  const[tab,setTab]=useState<'leave'|'suspension'>('leave')
  const[form,setForm]=useState({studentId:'',type:'medical',start:'',end:'',reason:''})
- const[msg,setMsg]=useState('');const[loading,setLoading]=useState(false);const[decision,setDecision]=useState<{kind:'leave'|'suspension';id:string}|null>(null);const[note,setNote]=useState('');const[signature,setSignature]=useState('');const[signatureMode,setSignatureMode]=useState<'draw'|'type'>('draw');const[printRow,setPrintRow]=useState<RequestRow|null>(null);const[signatureCanvas,setSignatureCanvas]=useState<HTMLCanvasElement|null>(null)
+ const[msg,setMsg]=useState('');const[loading,setLoading]=useState(false);const[decision,setDecision]=useState<{kind:'leave'|'suspension';id:string}|null>(null);const[note,setNote]=useState('');const[signature,setSignature]=useState('');const[printRow,setPrintRow]=useState<RequestRow|null>(null)
 
  const load=async()=>{
   const{data:{user}}=await db.auth.getUser();if(!user)return
