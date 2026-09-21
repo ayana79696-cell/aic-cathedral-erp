@@ -27,7 +27,7 @@ export default function StudentStatus(){
  }
  useEffect(()=>{load()},[])
  const studentMap=useMemo(()=>Object.fromEntries(students.map(s=>[s.id,`${s.first_name} ${s.middle_name||''} ${s.last_name}`.replace(/\s+/g,' ').trim()])),[students])
- const approverFor=(kind:'leave'|'suspension')=>role==='super_admin'||role==='admin'||approvalRoles.some(x=>x.request_type===kind&&x.role===role&&x.enabled)
+ const approverFor=(kind:'leave'|'suspension')=>role==='super_admin'||approvalRoles.some(x=>x.request_type===kind&&x.role===role&&x.enabled)
  const pending=tab==='leave'?leave.filter(x=>x.status==='pending'):susp.filter(x=>x.status==='pending')
  const activeLeave=leave.filter(x=>x.status==='approved'&&x.start_date<=new Date().toISOString().slice(0,10)&&x.end_date>=new Date().toISOString().slice(0,10))
  const activeSusp=susp.filter(x=>x.status==='approved'&&x.start_date<=new Date().toISOString().slice(0,10)&&x.end_date>=new Date().toISOString().slice(0,10))
