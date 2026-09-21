@@ -80,7 +80,7 @@ create policy student_leave_insert on public.student_leave_requests for insert t
  requested_by=(select auth.uid()) and public.current_role()=any(array['super_admin','admin','headteacher','deputy_headteacher','class_teacher','subject_teacher']::public.user_role[])
 );
 create policy student_leave_update on public.student_leave_requests for update to authenticated using (
- public.current_role()=any(array['super_admin','admin']::public.user_role[]) or
+ public.current_role()='super_admin'::public.user_role or
  exists(select 1 from public.student_approval_roles ar where ar.request_type='leave' and ar.enabled and ar.role=public.current_role()) or
  requested_by=(select auth.uid())
 ) with check (
@@ -97,7 +97,7 @@ create policy student_suspension_insert on public.student_suspension_requests fo
  requested_by=(select auth.uid()) and public.current_role()=any(array['super_admin','admin','headteacher','deputy_headteacher','class_teacher']::public.user_role[])
 );
 create policy student_suspension_update on public.student_suspension_requests for update to authenticated using (
- public.current_role()=any(array['super_admin','admin']::public.user_role[]) or
+ public.current_role()='super_admin'::public.user_role or
  exists(select 1 from public.student_approval_roles ar where ar.request_type='suspension' and ar.enabled and ar.role=public.current_role()) or
  requested_by=(select auth.uid())
 ) with check (
