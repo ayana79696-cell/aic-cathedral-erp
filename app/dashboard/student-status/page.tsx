@@ -3,6 +3,7 @@
 import {useEffect,useMemo,useState} from 'react'
 import {createClient} from '../../../lib/supabase/client'
 import LeaveSignature from '../hr/leave-signature'
+import OfficialSchoolLogo from '../_components/official-school-logo'
 
 type Student={id:string;admission_number:string;first_name:string;middle_name?:string|null;last_name:string;class_id?:string|null;stream_id?:string|null}
 type RequestRow={id:string;student_id:string;start_date:string;end_date:string;reason:string;status:string;leave_type?:string;suspension_type?:string;requested_by:string;approved_by?:string|null;approver_signature?:string|null;approver_name?:string|null;decision_note?:string|null;decided_at?:string|null;created_at:string}
@@ -71,7 +72,7 @@ export default function StudentStatus(){
 
  return <main className="main">
    <style jsx>{`
-.print-document{display:none}
+.print-header .school-logo-svg{width:23mm;height:23mm;display:block;flex:0 0 auto}.print-header .school-logo-svg svg{width:100%;height:100%;display:block}.print-document{display:none}
 @media print{
  @page{size:A4 portrait;margin:0}
  html,body{margin:0!important;padding:0!important;background:#fff!important}
@@ -131,7 +132,7 @@ export default function StudentStatus(){
   {decision&&<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.45)',display:'grid',placeItems:'center',zIndex:1000,padding:20}}><div className="card" style={{maxWidth:700,width:'100%',maxHeight:'94vh',overflow:'auto'}}><h2>{decision.kind==='leave'?'Approve':'Review'} Student {decision.kind==='leave'?'Leave':'Suspension'}</h2><p className="muted">Class Teacher / Head Teacher signature. Sign in the box below, or switch to “Type name”.</p><LeaveSignature label="Class Teacher / Headteacher Signature" value={signature} onChange={setSignature}/><textarea rows={4} placeholder="Decision note (optional)" value={note} onChange={e=>setNote(e.target.value)} style={{width:'100%',marginTop:12}}/><div style={{display:'flex',gap:10,marginTop:14}}><button className="btn" disabled={loading||!signature.trim()} onClick={()=>decide(decision.kind,decision.id,'approved')}>Approve & Sign</button><button className="btn secondary" disabled={loading||!signature.trim()} onClick={()=>decide(decision.kind,decision.id,'rejected')}>Reject & Sign</button><button className="btn secondary" onClick={()=>{setDecision(null);setSignature('');setNote('')}}>Cancel</button></div></div></div>}
 
   <div className="print-document">
-   <div className="print-header"><img src="/aic-cathedral-official-logo.svg" alt="AIC Cathedral Comprehensive School"/><div><h1>AIC Cathedral Comprehensive School</h1><p>Gilgil, Nakuru County, Kenya</p><p>Student Leave / Suspension Official Form</p></div></div>
+   <div className="print-header"><OfficialSchoolLogo className="school-logo-svg"/><div><h1>AIC Cathedral Comprehensive School</h1><p>Gilgil, Nakuru County, Kenya</p><p>Student Leave / Suspension Official Form</p></div></div>
    <div className="print-title">{printRow?rowKind(printRow):'Student Status Form'}</div>
    <div className="print-grid">
     <div className="print-cell"><div className="print-label">Student Name</div><div className="print-value">{printStudent?studentMap[printStudent.id]:'—'}</div></div>
