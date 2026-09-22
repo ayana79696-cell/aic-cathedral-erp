@@ -73,22 +73,32 @@ export default function StudentStatus(){
    <style jsx>{`
 .print-document{display:none}
 @media print{
+ html,body{margin:0!important;padding:0!important;background:#fff!important}
  body *{visibility:hidden!important}
+ .main>*:not(.print-document){display:none!important}
+ .main{margin:0!important;padding:0!important;min-height:0!important}
  .print-document,.print-document *{visibility:visible!important}
- .print-document{display:block!important;position:absolute;left:0;top:0;width:100%;padding:28px 38px;font-family:Arial,sans-serif;color:#111;background:#fff}
+ .print-document{display:block!important;position:fixed;left:0;top:0;width:100%;min-height:100vh;box-sizing:border-box;padding:28px 38px;font-family:Arial,sans-serif;color:#111;background:#fff}
  .print-header{text-align:center;border-bottom:2px solid #111;padding-bottom:12px;margin-bottom:20px}
  .print-header h1{margin:0;font-size:22px}.print-header p{margin:4px 0;font-size:12px}
  .print-title{text-align:center;font-size:18px;font-weight:700;text-transform:uppercase;margin:18px 0}
  .print-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #222}
  .print-cell{padding:9px;border-right:1px solid #222;border-bottom:1px solid #222;min-height:38px}
  .print-cell:nth-child(2n){border-right:0}
+ .print-cell:nth-last-child(-n+2){border-bottom:0}
  .print-label{font-size:10px;text-transform:uppercase;color:#555;font-weight:700}
  .print-value{font-size:13px;margin-top:4px}
  .print-reason{border:1px solid #222;border-top:0;padding:12px;min-height:100px}
- .print-signatures{display:grid;grid-template-columns:1fr 1fr;gap:50px;margin-top:55px;align-items:start}
- .print-sign{border-top:1px solid #111;padding-top:7px;font-size:12px;min-height:110px}
- .print-note{margin-top:28px;font-size:11px}
+ .print-signatures{display:block;margin-top:48px}
+ .print-sign{border-top:1px solid #111;padding-top:7px;font-size:12px;min-height:125px}
+ .print-sign .typed-signature{font-size:15px;font-weight:600;margin-top:12px}
+ .print-sign .signature-name{font-size:13px;font-weight:700;margin-top:3px}
+ .print-sign .signature-role{font-size:12px;margin-top:2px}
+ .print-sign .signature-date{font-size:12px;margin-top:6px}
+ .print-note{margin-top:22px;font-size:11px;border:1px solid #d8e1f0;padding:12px}
+ .print-official{margin-top:45px;text-align:center;font-style:italic;font-size:13px;border-top:2px solid #111;padding-top:8px}
  .signature-image{max-width:260px;max-height:80px;display:block;margin:8px 0}
+ @page{size:A4 portrait;margin:0}
 }
 `}</style>
 
@@ -136,10 +146,10 @@ export default function StudentStatus(){
    </div>
    <div className="print-reason"><div className="print-label">Reason / Grounds</div><div className="print-value">{printRow?.reason||'—'}</div></div>
    <div className="print-signatures">
-    <div className="print-sign"><strong>Class Teacher / Headteacher Signature</strong>{savedSignature.startsWith('data:image/')?<img className="signature-image" src={savedSignature} alt="Approver signature"/>:<div className="typed-signature">{savedSignature||signer?.full_name||'________________________________'}</div>}<br/>{signer?.role||'Class Teacher / Headteacher'}{printRow?.decided_at?' • '+new Date(printRow.decided_at).toLocaleDateString():''}</div>
-    <div className="print-sign"><strong>School Administration</strong><br/>Signature: ________________________________<br/>Date: _____________________________________</div>
+    <div className="print-sign"><strong>Class Teacher / Headteacher Signature</strong>{savedSignature.startsWith('data:image/')?<img className="signature-image" src={savedSignature} alt="Approver signature"/>:<div className="typed-signature">{savedSignature||printRow?.approver_name||signer?.full_name||'________________________________'}</div>}<div className="signature-name">{printRow?.approver_name||signer?.full_name||''}</div><div className="signature-role">Class Teacher / Headteacher</div>{printRow?.decided_at&&<div className="signature-date">Date: {new Date(printRow.decided_at).toLocaleDateString()}</div>}</div>
    </div>
    <div className="print-note"><strong>Decision note:</strong> {printRow?.decision_note||'None'}<br/><br/>This form records the leave/suspension decision stored in the school ERP.</div>
+   <div className="print-official">Official School Record</div>
   </div>
  </main>
 }
