@@ -73,32 +73,31 @@ export default function StudentStatus(){
    <style jsx>{`
 .print-document{display:none}
 @media print{
+ @page{size:A4 portrait;margin:0}
  html,body{margin:0!important;padding:0!important;background:#fff!important}
  body *{visibility:hidden!important}
  .main>*:not(.print-document){display:none!important}
  .main{margin:0!important;padding:0!important;min-height:0!important}
  .print-document,.print-document *{visibility:visible!important}
- .print-document{display:block!important;position:fixed;left:0;top:0;width:100%;min-height:100vh;box-sizing:border-box;padding:28px 38px;font-family:Arial,sans-serif;color:#111;background:#fff}
- .print-header{text-align:center;border-bottom:2px solid #111;padding-bottom:12px;margin-bottom:20px}
- .print-header h1{margin:0;font-size:22px}.print-header p{margin:4px 0;font-size:12px}
- .print-title{text-align:center;font-size:18px;font-weight:700;text-transform:uppercase;margin:18px 0}
+ .print-document{display:block!important;position:fixed;left:0;top:0;width:210mm;height:297mm;box-sizing:border-box;padding:12mm 14mm 9mm;font-family:Arial,sans-serif;color:#111;background:#fff}
+ .print-header{display:flex;align-items:center;justify-content:center;gap:8mm;text-align:center;border-bottom:2px solid #7b1e2b;padding-bottom:5mm;margin-bottom:7mm}
+ .print-header img{width:23mm;height:23mm;object-fit:contain;flex:0 0 auto}
+ .print-header h1{margin:0;font-size:18px;line-height:1.15}.print-header p{margin:1.5mm 0;font-size:9px}.print-header p:last-child{font-size:8px}
+ .print-title{text-align:center;font-size:15px;font-weight:700;text-transform:uppercase;margin:5mm 0 6mm;letter-spacing:1px}
  .print-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #222}
- .print-cell{padding:9px;border-right:1px solid #222;border-bottom:1px solid #222;min-height:38px}
- .print-cell:nth-child(2n){border-right:0}
- .print-cell:nth-last-child(-n+2){border-bottom:0}
- .print-label{font-size:10px;text-transform:uppercase;color:#555;font-weight:700}
- .print-value{font-size:13px;margin-top:4px}
- .print-reason{border:1px solid #222;border-top:0;padding:12px;min-height:100px}
- .print-signatures{display:block;margin-top:48px}
- .print-sign{border-top:1px solid #111;padding-top:7px;font-size:12px;min-height:125px}
- .print-sign .typed-signature{font-size:15px;font-weight:600;margin-top:12px}
- .print-sign .signature-name{font-size:13px;font-weight:700;margin-top:3px}
- .print-sign .signature-role{font-size:12px;margin-top:2px}
- .print-sign .signature-date{font-size:12px;margin-top:6px}
- .print-note{margin-top:22px;font-size:11px;border:1px solid #d8e1f0;padding:12px}
- .print-official{margin-top:45px;text-align:center;font-style:italic;font-size:13px;border-top:2px solid #111;padding-top:8px}
- .signature-image{max-width:260px;max-height:80px;display:block;margin:8px 0}
- @page{size:A4 portrait;margin:0}
+ .print-cell{padding:4mm;border-right:1px solid #222;border-bottom:1px solid #222;min-height:31px}
+ .print-cell:nth-child(2n){border-right:0}.print-cell:nth-last-child(-n+2){border-bottom:0}
+ .print-label{font-size:8px;text-transform:uppercase;color:#555;font-weight:700}.print-value{font-size:11px;margin-top:1.5mm}
+ .print-reason{border:1px solid #222;border-top:0;padding:4mm;min-height:42mm;font-size:11px}
+ .print-signatures{display:block;margin-top:10mm;page-break-inside:avoid}
+ .print-sign{display:flex;flex-direction:column;min-height:32mm;font-size:10px}
+ .print-sign>strong{margin-bottom:1mm}
+ .print-sign .typed-signature{font-size:16px;font-family:cursive;font-weight:600;height:18mm;line-height:18mm;margin:0}
+ .print-sign .signature-image{width:55mm;height:18mm;object-fit:contain;object-position:left bottom;display:block;margin:0 0 1mm}
+ .print-sign::after{content:"";display:block;border-top:1px solid #111;margin-top:0}
+ .print-sign .signature-name{font-size:9px;font-weight:700;margin-top:1.5mm}.print-sign .signature-role{font-size:8px;margin-top:1mm}.print-sign .signature-date{font-size:8px;margin-top:1mm}
+ .print-note{margin-top:7mm;font-size:9px;border:1px solid #d8e1f0;padding:3mm}
+ .print-official{margin-top:12mm;text-align:center;font-style:italic;font-size:10px;border-top:2px solid #7b1e2b;padding-top:3mm}
 }
 `}</style>
 
@@ -132,7 +131,7 @@ export default function StudentStatus(){
   {decision&&<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.45)',display:'grid',placeItems:'center',zIndex:1000,padding:20}}><div className="card" style={{maxWidth:700,width:'100%',maxHeight:'94vh',overflow:'auto'}}><h2>{decision.kind==='leave'?'Approve':'Review'} Student {decision.kind==='leave'?'Leave':'Suspension'}</h2><p className="muted">Class Teacher / Head Teacher signature. Sign in the box below, or switch to “Type name”.</p><LeaveSignature label="Class Teacher / Headteacher Signature" value={signature} onChange={setSignature}/><textarea rows={4} placeholder="Decision note (optional)" value={note} onChange={e=>setNote(e.target.value)} style={{width:'100%',marginTop:12}}/><div style={{display:'flex',gap:10,marginTop:14}}><button className="btn" disabled={loading||!signature.trim()} onClick={()=>decide(decision.kind,decision.id,'approved')}>Approve & Sign</button><button className="btn secondary" disabled={loading||!signature.trim()} onClick={()=>decide(decision.kind,decision.id,'rejected')}>Reject & Sign</button><button className="btn secondary" onClick={()=>{setDecision(null);setSignature('');setNote('')}}>Cancel</button></div></div></div>}
 
   <div className="print-document">
-   <div className="print-header"><h1>AIC Cathedral Comprehensive School</h1><p>Student Leave / Suspension Official Form</p><p>Generated from the school ERP</p></div>
+   <div className="print-header"><img src="/aic-cathedral-official-logo.svg" alt="AIC Cathedral Comprehensive School"/><div><h1>AIC Cathedral Comprehensive School</h1><p>Gilgil, Nakuru County, Kenya</p><p>Student Leave / Suspension Official Form</p></div></div>
    <div className="print-title">{printRow?rowKind(printRow):'Student Status Form'}</div>
    <div className="print-grid">
     <div className="print-cell"><div className="print-label">Student Name</div><div className="print-value">{printStudent?studentMap[printStudent.id]:'—'}</div></div>
