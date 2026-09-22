@@ -148,7 +148,7 @@ export default function StudentStatus(){
    <div className="print-signatures">
     <div className="print-sign"><strong>Class Teacher / Headteacher Signature</strong>{savedSignature.startsWith('data:image/')?<img className="signature-image" src={savedSignature} alt="Approver signature"/>:<div className="typed-signature">{savedSignature||printRow?.approver_name||signer?.full_name||'________________________________'}</div>}<div className="signature-name">{printRow?.approver_name||signer?.full_name||''}</div><div className="signature-role">Class Teacher / Headteacher</div>{printRow?.decided_at&&<div className="signature-date">Date: {new Date(printRow.decided_at).toLocaleDateString()}</div>}</div>
    </div>
-   <div className="print-note"><strong>Decision note:</strong> {printRow?.decision_note||'None'}<br/><br/>This form records the leave/suspension decision stored in the school ERP.</div>
+   <div className="print-note"><strong>Decision note:</strong> {printRow?.decision_note||'None'}</div>
    <div className="print-official">Official School Record</div>
   </div>
  </main>
