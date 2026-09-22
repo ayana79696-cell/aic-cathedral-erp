@@ -6,7 +6,7 @@ import LeaveSignature from '../hr/leave-signature'
 import OfficialSchoolLogo from '../_components/official-school-logo'
 
 type Student={id:string;admission_number:string;first_name:string;middle_name?:string|null;last_name:string;class_id?:string|null;stream_id?:string|null}
-type RequestRow={id:string;student_id:string;start_date:string;end_date:string;reason:string;status:string;leave_type?:string;suspension_type?:string;requested_by:string;approved_by?:string|null;approver_signature?:string|null;approver_name?:string|null;decision_note?:string|null;decided_at?:string|null;created_at:string}
+type RequestRow={id:string;student_id:string;start_date:string;end_date:string;start_time?:string|null;end_time?:string|null;reason:string;status:string;leave_type?:string;suspension_type?:string;requested_by:string;approved_by?:string|null;approver_signature?:string|null;approver_name?:string|null;decision_note?:string|null;decided_at?:string|null;created_at:string}
 type Person={id:string;full_name?:string|null;role?:string|null}
 
 export default function StudentStatus(){
@@ -15,7 +15,7 @@ export default function StudentStatus(){
  const[students,setStudents]=useState<Student[]>([]);const[classes,setClasses]=useState<Record<string,string>>({});const[streams,setStreams]=useState<Record<string,string>>({})
  const[leave,setLeave]=useState<RequestRow[]>([]);const[susp,setSusp]=useState<RequestRow[]>([]);const[approvalRoles,setApprovalRoles]=useState<any[]>([]);const[people,setPeople]=useState<Record<string,Person>>({})
  const[tab,setTab]=useState<'leave'|'suspension'>('leave')
- const[form,setForm]=useState({studentId:'',type:'medical',start:'',end:'',reason:''})
+ const[form,setForm]=useState({studentId:'',type:'medical',start:'',end:'',startTime:'',endTime:'',reason:''})
  const[msg,setMsg]=useState('');const[loading,setLoading]=useState(false);const[decision,setDecision]=useState<{kind:'leave'|'suspension';id:string}|null>(null);const[note,setNote]=useState('');const[signature,setSignature]=useState('');const[printRow,setPrintRow]=useState<RequestRow|null>(null)
 
  const load=async()=>{
@@ -50,9 +50,11 @@ export default function StudentStatus(){
  const submit=async()=>{
   setMsg('');if(!form.studentId||!form.start||!form.end||!form.reason.trim()){setMsg('Select a student, dates and reason.');return}
   if(form.end<form.start){setMsg('End date cannot be before start date.');return}
-  setLoading(true);const payload:any={student_id:form.studentId,start_date:form.start,end_date:form.end,reason:form.reason.trim(),requested_by:userId,status:'pending'};payload[tab==='leave'?'leave_type':'suspension_type']=form.type
+  if((form.startTime&&!form.endTime)||(form.endTime&&!form.startTime)){setMsg('Enter both start and end times, or leave both blank for a full-day request.');return}
+  if(form.start===form.end&&form.startTime&&form.endTime&&form.endTime<form.startTime){setMsg('End time cannot be before start time on the same day.');return}
+  setLoading(true);const payload:any={student_id:form.studentId,start_date:form.start,end_date:form.end,start_time:form.startTime||null,end_time:form.endTime||null,reason:form.reason.trim(),requested_by:userId,status:'pending'};payload[tab==='leave'?'leave_type':'suspension_type']=form.type
   const{error}=tab==='leave'?await db.from('student_leave_requests').insert(payload):await db.from('student_suspension_requests').insert(payload)
-  setLoading(false);if(error)setMsg(error.message);else{setMsg((tab==='leave'?'Leave':'Suspension')+' request submitted for approval.');setForm({studentId:'',type:tab==='leave'?'medical':'disciplinary',start:'',end:'',reason:''});await load()}
+  setLoading(false);if(error)setMsg(error.message);else{setMsg((tab==='leave'?'Leave':'Suspension')+' request submitted for approval.');setForm({studentId:'',type:tab==='leave'?'medical':'disciplinary',start:'',end:'',startTime:'',endTime:'',reason:''});await load()}
  }
 
  const decide=async(kind:'leave'|'suspension',id:string,status:'approved'|'rejected')=>{
@@ -72,6 +74,8 @@ export default function StudentStatus(){
 
  return <main className="main">
    <style jsx>{`
+.field-label{display:block;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#65707d;margin:0 0 5px}
+
 .print-header .school-logo-svg{width:23mm;height:23mm;display:block;flex:0 0 auto}.print-header .school-logo-svg svg{width:100%;height:100%;display:block}.print-document{display:none}
 @media print{
  @page{size:A4 portrait;margin:0}
@@ -116,7 +120,7 @@ export default function StudentStatus(){
    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))',gap:10}}>
     <select value={form.studentId} onChange={e=>setForm({...form,studentId:e.target.value})}><option value="">Select student</option>{students.map(s=><option key={s.id} value={s.id}>{s.admission_number} — {studentMap[s.id]}</option>)}</select>
     <select value={form.type} onChange={e=>setForm({...form,type:e.target.value})}>{tab==='leave'?<><option value="medical">Medical</option><option value="family">Family / Personal</option><option value="emergency">Emergency</option><option value="bereavement">Bereavement</option><option value="other">Other</option></>:<><option value="disciplinary">Disciplinary</option><option value="temporary">Temporary</option><option value="other">Other</option></>}</select>
-    <input type="date" value={form.start} onChange={e=>setForm({...form,start:e.target.value})}/><input type="date" value={form.end} onChange={e=>setForm({...form,end:e.target.value})}/>
+    <div><label className="field-label">Start date</label><input type="date" value={form.start} onChange={e=>setForm({...form,start:e.target.value})}/></div><div><label className="field-label">End date</label><input type="date" value={form.end} onChange={e=>setForm({...form,end:e.target.value})}/></div><div><label className="field-label">Start time (optional)</label><input type="time" value={form.startTime} onChange={e=>setForm({...form,startTime:e.target.value})}/></div><div><label className="field-label">End time (optional)</label><input type="time" value={form.endTime} onChange={e=>setForm({...form,endTime:e.target.value})}/></div>
     <textarea style={{gridColumn:'1/-1'}} placeholder={tab==='leave'?'Reason for leave':'Reason / disciplinary grounds'} value={form.reason} onChange={e=>setForm({...form,reason:e.target.value})}/>
    </div>
    <button className="btn" style={{marginTop:12}} disabled={loading} onClick={submit}>{loading?'Submitting…':'Submit for Approval'}</button>{msg&&<p className="muted">{msg}</p>}
@@ -124,7 +128,7 @@ export default function StudentStatus(){
 
   <section className="card" style={{marginTop:16}}>
    <div style={{display:'flex',gap:8,alignItems:'center',justifyContent:'space-between',flexWrap:'wrap'}}><div><h2 style={{marginBottom:4}}>{tab==='leave'?'Leave Approval Queue':'Suspension Approval Queue'}</h2><p className="muted">Class Teacher or Headteacher can sign/approve when enabled by Super Admin.</p></div>{approverFor(tab)&&<span className="prototype-badge green">You can approve & sign</span>}</div>
-   <div className="prototype-table-wrap"><table className="prototype-table"><thead><tr><th>STUDENT</th><th>CLASS / STREAM</th><th>DATES</th><th>TYPE</th><th>REASON</th><th>STATUS</th><th>ACTION</th></tr></thead><tbody>{pending.map(r=>{const s=students.find(x=>x.id===r.student_id);return <tr key={r.id}><td><strong>{studentMap[r.student_id]||'Student'}</strong><br/><span className="muted">{s?.admission_number||''}</span></td><td>{s?.class_id?classes[s.class_id]||'—':'—'} / {s?.stream_id?streams[s.stream_id]||'—':'—'}</td><td>{r.start_date} → {r.end_date}</td><td>{r.leave_type||r.suspension_type}</td><td>{r.reason}</td><td>{r.status}</td><td>{approverFor(tab)?<button className="btn" onClick={()=>{setDecision({kind:tab,id:r.id});setNote('')}}>Review & Sign</button>:<span className="muted">Awaiting approver</span>}</td></tr>})}{pending.length===0&&<tr><td colSpan={7} className="prototype-empty">No pending requests.</td></tr>}</tbody></table></div>
+   <div className="prototype-table-wrap"><table className="prototype-table"><thead><tr><th>STUDENT</th><th>CLASS / STREAM</th><th>DATES</th><th>TYPE</th><th>REASON</th><th>STATUS</th><th>ACTION</th></tr></thead><tbody>{pending.map(r=>{const s=students.find(x=>x.id===r.student_id);return <tr key={r.id}><td><strong>{studentMap[r.student_id]||'Student'}</strong><br/><span className="muted">{s?.admission_number||''}</span></td><td>{s?.class_id?classes[s.class_id]||'—':'—'} / {s?.stream_id?streams[s.stream_id]||'—':'—'}</td><td>{r.start_date} → {r.end_date}{(r.start_time||r.end_time)&&<><br/><span className="muted">{r.start_time||'—'} → {r.end_time||'—'}</span></>}</td><td>{r.leave_type||r.suspension_type}</td><td>{r.reason}</td><td>{r.status}</td><td>{approverFor(tab)?<button className="btn" onClick={()=>{setDecision({kind:tab,id:r.id});setNote('')}}>Review & Sign</button>:<span className="muted">Awaiting approver</span>}</td></tr>})}{pending.length===0&&<tr><td colSpan={7} className="prototype-empty">No pending requests.</td></tr>}</tbody></table></div>
   </section>
 
   <section className="card" style={{marginTop:16}}><h2>History</h2><div className="prototype-table-wrap"><table className="prototype-table"><thead><tr><th>STUDENT</th><th>TYPE</th><th>DATES</th><th>STATUS</th><th>SIGNED BY</th><th>PRINT</th></tr></thead><tbody>{[...leave.map(x=>({...x,_kind:'Leave'})),...susp.map(x=>({...x,_kind:'Suspension'}))].sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(0,100).map(r=>{const p=r.approved_by?people[r.approved_by]:null;return <tr key={r._kind+'-'+r.id}><td>{studentMap[r.student_id]||'Student'}</td><td>{r._kind}</td><td>{r.start_date} → {r.end_date}</td><td><strong>{r.status}</strong></td><td>{p?.full_name?p.full_name+' ('+(p.role||'Approver')+')':'—'}</td><td><button className="btn secondary" onClick={()=>printRequest(r)}>Download PDF</button></td></tr>})}</tbody></table></div></section>
@@ -143,6 +147,8 @@ export default function StudentStatus(){
     <div className="print-cell"><div className="print-label">Status</div><div className="print-value">{printRow?.status||'—'}</div></div>
     <div className="print-cell"><div className="print-label">Start Date</div><div className="print-value">{printRow?.start_date||'—'}</div></div>
     <div className="print-cell"><div className="print-label">End Date</div><div className="print-value">{printRow?.end_date||'—'}</div></div>
+    <div className="print-cell"><div className="print-label">Start Time</div><div className="print-value">{printRow?.start_time||'Full day'}</div></div>
+    <div className="print-cell"><div className="print-label">End Time</div><div className="print-value">{printRow?.end_time||'Full day'}</div></div>
    </div>
    <div className="print-reason"><div className="print-label">Reason / Grounds</div><div className="print-value">{printRow?.reason||'—'}</div></div>
    <div className="print-signatures">
