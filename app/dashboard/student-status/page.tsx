@@ -16,7 +16,7 @@ export default function StudentStatus(){
  const[leave,setLeave]=useState<RequestRow[]>([]);const[susp,setSusp]=useState<RequestRow[]>([]);const[approvalRoles,setApprovalRoles]=useState<any[]>([]);const[people,setPeople]=useState<Record<string,Person>>({})
  const[tab,setTab]=useState<'leave'|'suspension'>('leave')
  const[form,setForm]=useState({studentId:'',type:'medical',start:'',end:'',startTime:'',endTime:'',reason:''})
- const[msg,setMsg]=useState('');const[loading,setLoading]=useState(false);const[decision,setDecision]=useState<{kind:'leave'|'suspension';id:string}|null>(null);const[note,setNote]=useState('');const[signature,setSignature]=useState('');const[printRow,setPrintRow]=useState<RequestRow|null>(null)
+ const[msg,setMsg]=useState('');const[loading,setLoading]=useState(false);const[decision,setDecision]=useState<{kind:'leave'|'suspension';id:string}|null>(null);const[note,setNote]=useState('');const[signature,setSignature]=useState('');const[notifyParent,setNotifyParent]=useState(true);const[parentMessage,setParentMessage]=useState('');const[printRow,setPrintRow]=useState<RequestRow|null>(null)
 
  const load=async()=>{
   const{data:{user}}=await db.auth.getUser();if(!user)return
@@ -60,9 +60,30 @@ export default function StudentStatus(){
  const decide=async(kind:'leave'|'suspension',id:string,status:'approved'|'rejected')=>{
   if(!approverFor(kind)){setMsg('You are not an authorized approver for this request.');return}
   if(!signature.trim()){setMsg('Draw your signature or type your name before signing.');return}
-  setLoading(true);const table=kind==='leave'?'student_leave_requests':'student_suspension_requests'
-  const{error}=await db.from(table).update({status,approved_by:userId,approver_signature:signature,approver_name:people[userId]?.full_name||role,decided_at:new Date().toISOString(),decision_note:note.trim()||null}).eq('id',id).eq('status','pending')
-  setLoading(false);if(error)setMsg(error.message);else{setDecision(null);setNote('');setSignature('');setMsg((kind==='leave'?'Leave':'Suspension')+' '+status+'.');await load()}
+  setLoading(true)
+  const table=kind==='leave'?'student_leave_requests':'student_suspension_requests'
+  const request=[...leave,...susp].find((r:any)=>r.id===id&&r.status==='pending')
+  const decidedAt=new Date().toISOString()
+  const{error}=await db.from(table).update({status,approved_by:userId,approver_signature:signature,approver_name:people[userId]?.full_name||role,decided_at:decidedAt,decision_note:note.trim()||null}).eq('id',id).eq('status','pending')
+  if(error){setLoading(false);setMsg(error.message);return}
+  let queueWarning=''
+  if(status==='approved'&&notifyParent&&parentMessage.trim()&&request){
+    const{data:links,error:linkError}=await db.from('student_parents').select('parent_id,primary_guardian,parents(id,name,phone,email,status)').eq('student_id',request.student_id)
+    const candidates=(links||[]).map((x:any)=>{const p=Array.isArray(x.parents)?x.parents[0]:x.parents;return p&&p.phone&&String(p.status||'active')==='active'?{...p,primary_guardian:!!x.primary_guardian}:null}).filter(Boolean)
+    candidates.sort((a:any,b:any)=>Number(b.primary_guardian)-Number(a.primary_guardian))
+    const parent=candidates[0]
+    if(linkError||!parent) queueWarning=' Approved, but no active parent/guardian phone number was found, so no SMS was queued.'
+    else{
+      const title=kind==='leave'?'Student Leave Notice':'Student Suspension Notice'
+      const{data:b,error:be}=await db.from('message_broadcasts').insert({title,message:parentMessage.trim(),channel:'sms',audience:'parents',status:'phone_pending',created_by:userId}).select('id').single()
+      if(be||!b) queueWarning=' Approved, but the parent SMS could not be queued: '+(be?.message||'unknown error')+'.'
+      else{
+        const{error:re}=await db.from('message_recipients').insert({broadcast_id:b.id,parent_id:parent.id,phone:parent.phone,email:parent.email||null,channel:'sms',status:'phone_pending'})
+        if(re) queueWarning=' Approved, but the parent SMS recipient could not be queued: '+re.message+'.'
+      }
+    }
+  }
+  setLoading(false);setDecision(null);setNote('');setSignature('');setNotifyParent(true);setParentMessage('');setMsg((kind==='leave'?'Leave':'Suspension')+' '+status+'.'+queueWarning);await load()
  }
 
  const rowKind=(r:RequestRow)=>r.leave_type?'Student Leave':'Student Suspension'
@@ -133,7 +154,13 @@ export default function StudentStatus(){
 
   <section className="card" style={{marginTop:16}}><h2>History</h2><div className="prototype-table-wrap"><table className="prototype-table"><thead><tr><th>STUDENT</th><th>TYPE</th><th>DATES</th><th>STATUS</th><th>SIGNED BY</th><th>PRINT</th></tr></thead><tbody>{[...leave.map(x=>({...x,_kind:'Leave'})),...susp.map(x=>({...x,_kind:'Suspension'}))].sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(0,100).map(r=>{const p=r.approved_by?people[r.approved_by]:null;return <tr key={r._kind+'-'+r.id}><td>{studentMap[r.student_id]||'Student'}</td><td>{r._kind}</td><td>{r.start_date} → {r.end_date}{(r.start_time||r.end_time)&&<><br/><span className="muted">{r.start_time||'—'} → {r.end_time||'—'}</span></>}</td><td><strong>{r.status}</strong></td><td>{p?.full_name?p.full_name+' ('+(p.role||'Approver')+')':'—'}</td><td><button className="btn secondary" onClick={()=>printRequest(r)}>Download PDF</button></td></tr>})}</tbody></table></div></section>
 
-  {decision&&<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.45)',display:'grid',placeItems:'center',zIndex:1000,padding:20}}><div className="card" style={{maxWidth:700,width:'100%',maxHeight:'94vh',overflow:'auto'}}><h2>{decision.kind==='leave'?'Approve':'Review'} Student {decision.kind==='leave'?'Leave':'Suspension'}</h2><p className="muted">Class Teacher / Head Teacher signature. Sign in the box below, or switch to “Type name”.</p><LeaveSignature label="Class Teacher / Headteacher Signature" value={signature} onChange={setSignature}/><textarea rows={4} placeholder="Decision note (optional)" value={note} onChange={e=>setNote(e.target.value)} style={{width:'100%',marginTop:12}}/><div style={{display:'flex',gap:10,marginTop:14}}><button className="btn" disabled={loading||!signature.trim()} onClick={()=>decide(decision.kind,decision.id,'approved')}>Approve & Sign</button><button className="btn secondary" disabled={loading||!signature.trim()} onClick={()=>decide(decision.kind,decision.id,'rejected')}>Reject & Sign</button><button className="btn secondary" onClick={()=>{setDecision(null);setSignature('');setNote('')}}>Cancel</button></div></div></div>}
+  {decision&&<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.45)',display:'grid',placeItems:'center',zIndex:1000,padding:20}}><div className="card" style={{maxWidth:700,width:'100%',maxHeight:'94vh',overflow:'auto'}}><h2>{decision.kind==='leave'?'Approve':'Review'} Student {decision.kind==='leave'?'Leave':'Suspension'}</h2><p className="muted">Class Teacher / Head Teacher signature. Sign in the box below, or switch to “Type name”.</p><LeaveSignature label="Class Teacher / Headteacher Signature" value={signature} onChange={setSignature}/>
+<div style={{marginTop:16,padding:14,border:'1px solid #e4e8ee',borderRadius:12,background:'#f8fafc'}}>
+  <label style={{display:'flex',gap:9,alignItems:'center',fontWeight:800,cursor:'pointer'}}><input type="checkbox" checked={notifyParent} onChange={e=>setNotifyParent(e.target.checked)}/> Automatically queue SMS notification to the parent/guardian</label>
+  <p className="muted" style={{margin:'7px 0 10px'}}>The system will use the student's registered primary parent/guardian phone number. The SMS goes into Communications and is then picked up by AIC School Messenger.</p>
+  {notifyParent&&<textarea rows={4} value={parentMessage} onChange={e=>setParentMessage(e.target.value)} placeholder="Parent/guardian message"/>}
+</div>
+<textarea rows={4} placeholder="Decision note (optional)" value={note} onChange={e=>setNote(e.target.value)} style={{width:'100%',marginTop:12}}/><div style={{display:'flex',gap:10,marginTop:14}}><button className="btn" disabled={loading||!signature.trim()} onClick={()=>decide(decision.kind,decision.id,'approved')}>Approve & Sign</button><button className="btn secondary" disabled={loading||!signature.trim()} onClick={()=>decide(decision.kind,decision.id,'rejected')}>Reject & Sign</button><button className="btn secondary" onClick={()=>{setDecision(null);setSignature('');setNote('')}}>Cancel</button></div></div></div>}
 
   <div className="print-document">
    <div className="print-header"><OfficialSchoolLogo className="school-logo-svg"/><div><h1>AIC Cathedral Comprehensive School</h1><p>Gilgil, Nakuru County, Kenya</p><p>Student Leave / Suspension Official Form</p></div></div>
