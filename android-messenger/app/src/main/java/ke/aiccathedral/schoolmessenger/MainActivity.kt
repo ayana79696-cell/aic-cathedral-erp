@@ -9,6 +9,8 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.telephony.SubscriptionInfo
 import android.telephony.SubscriptionManager
 import android.telephony.SmsManager
@@ -51,6 +53,16 @@ class MainActivity : Activity() {
         }
         scroll.addView(root)
         setContentView(scroll)
+
+        val logo = ImageView(this).apply {
+            setImageBitmap(BitmapFactory.decodeStream(resources.openRawResource(R.raw.aic_cathedral_logo)))
+            adjustViewBounds = true
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            setBackgroundColor(Color.WHITE)
+            setPadding(0, 0, 0, 12)
+            layoutParams = LinearLayout.LayoutParams(-1, 180)
+        }
+        root.addView(logo)
 
         val brand = TextView(this).apply {
             text = "AIC School Messenger"
