@@ -42,7 +42,18 @@ export default function MeritList({students,marks,exams,areas,classes,streams,ro
  const levelTotal=(i:number)=>gradeAnalysis.reduce((a,x)=>a+x.levels[i],0);
  const pct=(n:number)=>totalDistribution?Math.round(n/totalDistribution*100):0;
 
- return <section className="card">
+ return <section className="card"><style jsx>{`
+@media print{
+ @page{size:A4 landscape;margin:10mm}
+ html,body{margin:0!important;padding:0!important;background:#fff!important}
+ body *{visibility:hidden!important}
+ .merit-print-target,.merit-print-target *{visibility:visible!important}
+ .merit-print-target{display:block!important;position:static!important;width:100%!important;margin:0!important;padding:0!important;background:#fff!important}
+ .merit-print-target:before{content:"AIC Cathedral Comprehensive School\\A Results Merit List";white-space:pre;display:block;text-align:center;font-size:18px;font-weight:800;margin-bottom:10mm}
+ .merit-print-target>div{overflow:visible!important}
+ .no-print{display:none!important}
+}
+`}</style>
   <div className="no-print" style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
    <h2 style={{marginRight:'auto'}}>Results, Remarks & Merit List</h2>
    <select value={exam} onChange={e=>setExam(e.target.value)}><option value="">Exam</option>{exams.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select>
@@ -80,7 +91,7 @@ export default function MeritList({students,marks,exams,areas,classes,streams,ro
    <div className="quick-actions"><button className="btn" onClick={()=>setView('merit')}>View Class Merit List</button><button className="btn" onClick={()=>window.print()} disabled={!exam||!cls}>Print Merit List</button><button className="btn" onClick={generateRemarks} disabled={!exam||!cls}>Generate Remarks</button></div>
   </div>
 
-  <div style={{display:view==='analysis'?'none':'block'}}><div style={{overflowX:'auto',marginTop:12}}><table className="prototype-table"><thead><tr><th>Pos.</th><th>ADM NO</th><th>LEARNER</th>{areas.map(a=><th key={a.id}>{a.name}</th>)}<th>Points</th><th>Average</th><th>Level</th></tr></thead><tbody>{visible.length?visible.map(r=>{const l=r.special?.achievement_level??(r.avg===null?'—':String(gr(r.avg)[0]));return <tr key={r.st.id}><td>{r.special?'—':positionFor(r.st.id)}</td><td>{r.st.admission_number}</td><td><strong>{nm(r.st)}</strong></td>{areas.map(a=>{const m=r.ms.find(x=>x.learning_area_id===a.id);return <td key={a.id}>{m?.achievement_level==='X'||m?.achievement_level==='Y'?m.achievement_level:m?.marks??'—'}</td>})}<td>{r.special?'—':r.points}</td><td>{r.avg===null?'—':r.avg.toFixed(1)+'%'}</td><td>{l}</td></tr>}) : <tr><td colSpan={areas.length+7} className="muted" style={{padding:30,textAlign:'center'}}>Select an exam and grade/class.</td></tr>}</tbody></table></div></div>
+  <div className="merit-print-target" style={{display:view==='analysis'?'none':'block'}}><div style={{overflowX:'auto',marginTop:12}}><table className="prototype-table"><thead><tr><th>Pos.</th><th>ADM NO</th><th>LEARNER</th>{areas.map(a=><th key={a.id}>{a.name}</th>)}<th>Points</th><th>Average</th><th>Level</th></tr></thead><tbody>{visible.length?visible.map(r=>{const l=r.special?.achievement_level??(r.avg===null?'—':String(gr(r.avg)[0]));return <tr key={r.st.id}><td>{r.special?'—':positionFor(r.st.id)}</td><td>{r.st.admission_number}</td><td><strong>{nm(r.st)}</strong></td>{areas.map(a=>{const m=r.ms.find(x=>x.learning_area_id===a.id);return <td key={a.id}>{m?.achievement_level==='X'||m?.achievement_level==='Y'?m.achievement_level:m?.marks??'—'}</td>})}<td>{r.special?'—':r.points}</td><td>{r.avg===null?'—':r.avg.toFixed(1)+'%'}</td><td>{l}</td></tr>}) : <tr><td colSpan={areas.length+7} className="muted" style={{padding:30,textAlign:'center'}}>Select an exam and grade/class.</td></tr>}</tbody></table></div></div>
 
   <div style={{marginTop:14}}>{visible.filter(r=>r.avg!==null).map(r=>{const l=String(gr(r.avg||0)[0]),rm=remarks[r.st.id];return <div key={r.st.id} style={{borderTop:'1px solid #e5e7eb',padding:'14px 0'}}><strong>{nm(r.st)}</strong><div className="muted"><b>Class Teacher:</b> {rm?.class_teacher_remark||classRemark(nm(r.st),l)}</div><div className="muted"><b>Headteacher:</b> {rm?.headteacher_remark||headRemark(nm(r.st),l)}</div></div>})}</div>
   <p className="muted" style={{marginTop:10}}>All remarks are generated from the learner’s actual performance and can be regenerated when results change.</p>
