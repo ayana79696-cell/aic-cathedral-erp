@@ -15,19 +15,24 @@ export default function FeeDebtMessaging({students,accounts}:{students:Student[]
  const[onlyDebt,setOnlyDebt]=useState(true)
  const[holds,setHolds]=useState<Record<string,boolean>>({})
 
- useEffect(()=>{void loadParents();void loadHolds()},[students.length])
+ useEffect(()=>{void loadParents();void loadHolds()},[students])
  async function loadParents(){
   const ids=students.map(s=>s.id); if(!ids.length){setParents({});return}
-  const{data,error}=await db.from('student_parents').select('student_id,parent_id,primary_guardian,parents(id,name,phone,status)').in('student_id',ids)
-  if(error){setNotice(error.message);return}
+  const{data:links,error:linkError}=await db.from('student_parents').select('student_id,parent_id,primary_guardian').in('student_id',ids)
+  if(linkError){setNotice(linkError.message);return}
+  const parentIds=Array.from(new Set((links||[]).map((x:any)=>x.parent_id).filter(Boolean)))
+  if(!parentIds.length){setParents({});return}
+  const{data:people,error:parentError}=await db.from('parents').select('id,name,phone,status,email').in('id',parentIds)
+  if(parentError){setNotice(parentError.message);return}
+  const byId:Record<string,any>={}
+  ;(people||[]).forEach((p:any)=>{byId[p.id]=p})
   const map:Record<string,{id:string;name:string;phone:string|null;status:string;primary:boolean}[]>={}
-  ;(data||[]).forEach((x:any)=>{
-   const p=x.parents?.[0]; if(!p)return
+  ;(links||[]).forEach((x:any)=>{
+   const p=byId[x.parent_id]; if(!p)return
    ;(map[x.student_id] ||= []).push({id:p.id,name:p.name||'Parent/Guardian',phone:p.phone||null,status:String(p.status||'active'),primary:!!x.primary_guardian})
   })
   setParents(map)
- }
- async function loadHolds(){
+ } async function loadHolds(){
   const ids=students.map(s=>s.id); if(!ids.length){setHolds({});return}
   const{data,error}=await db.from('transport_fee_status').select('student_id,cleared').in('student_id',ids)
   if(error){setNotice(error.message);return}
