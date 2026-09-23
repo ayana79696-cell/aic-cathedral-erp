@@ -7,6 +7,7 @@ import Invoices from './invoices'
 import StudentFeeStatements from './student-fee-statements'
 import FeeHoldManager from './fee-hold-manager'
 import FeeDebtMessaging from './fee-debt-messaging'
+import SchoolFeesReport from './school-fees-report'
 import Budget from './budget'
 import {PrototypePage} from '../_components/prototype-workspace'
 
@@ -14,7 +15,7 @@ export default async function Page(){
  const s=await createClient()
  const [{data:students},{data:accounts},{data:payments},{data:budgetLines},{data:payroll}]=await Promise.all([
   s.from('students').select('id,admission_number,first_name,middle_name,last_name,class_id,stream_id').eq('status','active').order('last_name'),
-  s.from('fee_accounts').select('amount_due,amount_paid,status,student_id'),
+  s.from('fee_accounts').select('amount_due,amount_paid,status,student_id,charge_type,charge_label'),
   s.from('fee_payments').select('amount,payment_category'),
   s.from('budget_lines').select('id,category,section,budget_amount,notes').order('section').order('category'),
   s.from('payroll_records').select('gross_pay,status')
@@ -37,13 +38,14 @@ export default async function Page(){
   return 0
  }
  const br=(budgetLines||[]).map(x=>({id:x.id,category:x.category,section:x.section as 'income'|'expenditure',budget:Number(x.budget_amount||0),actual:actualByCategory(x.category),notes:x.notes||null}))
- return <PrototypePage title="Finance & Fees" subtitle="Fees, payments, arrears, invoices, cashbook and budget planning" action={<a href="#budget" className="prototype-primary-button">+ Budget</a>} kpis={[{label:'Total Collected',value:`KES ${paid.toLocaleString('en-KE')}`,note:'Live recorded payments',tone:'navy'},{label:'Total Arrears',value:`KES ${Math.max(due-paid,0).toLocaleString('en-KE')}`,note:'Outstanding balances',tone:'green'},{label:'Fee-Hold Students',value:holds,note:'Linked to transport/teachers',tone:'red'},{label:'Payments Recorded',value:(payments||[]).length,note:'Payment entries',tone:'yellow'}]} tabs={[["#overview","Fees & Payments"],["#fee-debts","Fee Debts & SMS"],["#budget","Budget & Planning"],["#payment-history","Payments & Receipts"],["#thermal-receipts","School Fees Receipts"],["#statements","Student Statements"],["#cashbook","Money In & Out"],["#invoices","Invoices"],["#balances","Balances & Fee Hold"]]}>
+ return <PrototypePage title="Finance & Fees" subtitle="Fees, payments, arrears, invoices, cashbook and budget planning" action={<a href="#budget" className="prototype-primary-button">+ Budget</a>} kpis={[{label:'Total Collected',value:`KES ${paid.toLocaleString('en-KE')}`,note:'Live recorded payments',tone:'navy'},{label:'Total Arrears',value:`KES ${Math.max(due-paid,0).toLocaleString('en-KE')}`,note:'Outstanding balances',tone:'green'},{label:'Fee-Hold Students',value:holds,note:'Linked to transport/teachers',tone:'red'},{label:'Payments Recorded',value:(payments||[]).length,note:'Payment entries',tone:'yellow'}]} tabs={[["#overview","Fees & Payments"],["#fee-debts","Fee Debts & SMS"],["#budget","Budget & Planning"],["#payment-history","Payments & Receipts"],["#thermal-receipts","School Fees Receipts"],["#statements","Student Statements"],["#fees-report","Fees & Debt Report"],["#cashbook","Money In & Out"],["#invoices","Invoices"],["#balances","Balances & Fee Hold"]]}>
   <section id="overview"><FinanceDesk students={fs}/></section>
   <section id="fee-debts"><FeeDebtMessaging students={fs} accounts={accounts||[]}/></section>
   <section id="budget"><Budget rows={br}/></section>
   <section id="payment-history"><PaymentHistory /></section>
   <section id="thermal-receipts"><OfficialThermalFeeReceipts /></section>
   <section id="statements"><StudentFeeStatements /></section>
+  <section id="fees-report"><SchoolFeesReport students={fs} accounts={accounts||[]} /></section>
   <section id="cashbook"><Cashbook /></section>
   <section id="invoices"><Invoices /></section>
   <section id="balances"><FeeHoldManager students={fs} accounts={accounts||[]}/></section>
