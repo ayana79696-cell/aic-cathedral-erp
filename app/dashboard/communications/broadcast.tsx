@@ -30,16 +30,23 @@ export default function Broadcast(){
  const[channels,setChannels]=useState<any>({sms:true,whatsapp:true,email:true,inApp:false})
 
  async function loadContacts(){
-  const a=await db.from('students').select('id,first_name,last_name,admission_number,class_id,stream_id,classes(name),streams(name),student_parents(parent_id,relationship,primary_guardian,parents(id,name,phone,email,status))').eq('status','active').order('first_name')
-  const b=await db.from('staff').select('id,profile_id,employee_number,first_name,middle_name,last_name,phone,email,department,job_title,employment_type,status').eq('status','active').order('first_name')
-  if(a.error)setStatus(a.error.message);else setStudents((a.data||[]) as any[])
+  const [a,cq,sq,b]=await Promise.all([
+   db.from('students').select('id,first_name,last_name,admission_number,class_id,stream_id,student_parents(parent_id,relationship,primary_guardian,parents(id,name,phone,email,status))').eq('status','active').order('first_name'),
+   db.from('classes').select('id,name,level').eq('status','active').order('name'),
+   db.from('streams').select('id,class_id,name').eq('status','active').order('name'),
+   db.from('staff').select('id,profile_id,employee_number,first_name,middle_name,last_name,phone,email,department,job_title,employment_type,status').eq('status','active').order('first_name')
+  ])
+  const classMap=new Map((cq.data||[]).map((x:any)=>[x.id,x.name]))
+  const streamMap=new Map((sq.data||[]).map((x:any)=>[x.id,x.name]))
+  const enriched=(a.data||[]).map((s:any)=>({...s,class_name:classMap.get(s.class_id)||null,stream_name:streamMap.get(s.stream_id)||null}))
+  if(a.error)setStatus(a.error.message);else setStudents(enriched)
   if(b.error)setStatus(b.error.message);else setStaff((b.data||[]) as any[])
  }
  useEffect(()=>{void loadContacts();(async()=>{const{data}=await db.from('communication_settings').select('api_base_url,sender_name,sender_id,enabled').eq('provider','whatsapp').maybeSingle();if(data)setApi(data);try{const saved=localStorage.getItem('aic-communication-channels');if(saved)setChannels(JSON.parse(saved))}catch{}})()},[])
 
  const grades=['Playgroup','PP1','PP2','Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8','Grade 9']
  const streams=['East','West']
- const parentRows=useMemo(()=>students.flatMap(s=>(s.student_parents||[]).map((link:any)=>{const p=Array.isArray(link.parents)?link.parents[0]:link.parents;if(!p||!p.phone||String(p.status||'active')!=='active')return null;return{studentId:s.id,student:[s.first_name,s.last_name].filter(Boolean).join(' '),admission:s.admission_number||'',grade:s.classes?.[0]?.name||'Not assigned',stream:s.streams?.[0]?.name||'Not assigned',parentId:p.id,name:p.name||'Parent/Guardian',phone:p.phone,email:p.email||null,relationship:link.relationship||'Parent/Guardian',primary:!!link.primary_guardian}}).filter(Boolean)),[students])
+ const parentRows=useMemo(()=>students.flatMap(s=>(s.student_parents||[]).map((link:any)=>{const p=Array.isArray(link.parents)?link.parents[0]:link.parents;if(!p||!p.phone||String(p.status||'active')!=='active')return null;return{studentId:s.id,student:[s.first_name,s.last_name].filter(Boolean).join(' '),admission:s.admission_number||'',grade:s.class_name||'Not assigned',stream:s.stream_name||'Not assigned',parentId:p.id,name:p.name||'Parent/Guardian',phone:p.phone,email:p.email||null,relationship:link.relationship||'Parent/Guardian',primary:!!link.primary_guardian}}).filter(Boolean)),[students])
  const filteredParents=useMemo(()=>parentRows.filter((p:any)=>(grade==='all'||p.grade===grade)&&(stream==='all'||p.stream===stream)&&(!search||[p.student,p.name,p.phone,p.admission,p.grade,p.stream].join(' ').toLowerCase().includes(search.toLowerCase()))),[parentRows,grade,stream,search])
  const groups=useMemo(()=>{const out:any={};for(const p of filteredParents){out[p.grade]??={};out[p.grade][p.stream]??=[];out[p.grade][p.stream].push(p)}return out},[filteredParents])
  const selectedParentRows=useMemo(()=>parentRows.filter((p:any)=>selectedStudents.includes(p.studentId)),[parentRows,selectedStudents])
