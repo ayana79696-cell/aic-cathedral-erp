@@ -37,8 +37,8 @@ export default function Broadcast(){
  }
  useEffect(()=>{void loadContacts();(async()=>{const{data}=await db.from('communication_settings').select('api_base_url,sender_name,sender_id,enabled').eq('provider','whatsapp').maybeSingle();if(data)setApi(data);try{const saved=localStorage.getItem('aic-communication-channels');if(saved)setChannels(JSON.parse(saved))}catch{}})()},[])
 
- const grades=useMemo(()=>Array.from(new Set(students.map(s=>s.classes?.[0]?.name).filter(Boolean))).sort(),[students])
- const streams=useMemo(()=>Array.from(new Set(students.map(s=>s.streams?.[0]?.name).filter(Boolean))).sort(),[students])
+ const grades=['Playgroup','PP1','PP2','Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8','Grade 9']
+ const streams=['East','West']
  const parentRows=useMemo(()=>students.flatMap(s=>(s.student_parents||[]).map((link:any)=>{const p=Array.isArray(link.parents)?link.parents[0]:link.parents;if(!p||!p.phone||String(p.status||'active')!=='active')return null;return{studentId:s.id,student:[s.first_name,s.last_name].filter(Boolean).join(' '),admission:s.admission_number||'',grade:s.classes?.[0]?.name||'Unassigned',stream:s.streams?.[0]?.name||'Unassigned',parentId:p.id,name:p.name||'Parent/Guardian',phone:p.phone,email:p.email||null,relationship:link.relationship||'Parent/Guardian',primary:!!link.primary_guardian}}).filter(Boolean)),[students])
  const filteredParents=useMemo(()=>parentRows.filter((p:any)=>(grade==='all'||p.grade===grade)&&(stream==='all'||p.stream===stream)&&(!search||[p.student,p.name,p.phone,p.admission,p.grade,p.stream].join(' ').toLowerCase().includes(search.toLowerCase()))),[parentRows,grade,stream,search])
  const groups=useMemo(()=>{const out:any={};for(const p of filteredParents){out[p.grade]??={};out[p.grade][p.stream]??=[];out[p.grade][p.stream].push(p)}return out},[filteredParents])
