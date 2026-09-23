@@ -21,10 +21,10 @@ export default function Page(){
        const ordered=(assignments||[]).sort((a:any,b:any)=>Number(Boolean(b.stream_id===learner.stream_id))-Number(Boolean(a.stream_id===learner.stream_id)));
        const assignment=ordered.find((a:any)=>!a.stream_id||a.stream_id===learner.stream_id);
        if(assignment){
-        const{data:st}=await db.from('staff').select('id,profile_id,first_name,middle_name,last_name').eq('id',assignment.teacher_id).maybeSingle();
-        if(st?.profile_id){
-         const{data:sig}=await db.from('staff_signatures').select('signature').eq('profile_id',st.profile_id).eq('active',true).maybeSingle();
-         setClassTeacher({name:[st.first_name,st.middle_name,st.last_name].filter(Boolean).join(' '),signature:sig?.signature||''});
+        const{data:tp}=await db.from('profiles').select('id,full_name').eq('id',assignment.teacher_id).maybeSingle();
+        if(tp){
+         const{data:sig}=await db.from('staff_signatures').select('signature').eq('profile_id',tp.id).eq('active',true).maybeSingle();
+         setClassTeacher({name:tp.full_name||'Class Teacher',signature:sig?.signature||''});
         }
        }
       }
@@ -32,9 +32,8 @@ export default function Page(){
       const{data:heads}=await db.from('profiles').select('id,full_name').eq('role','headteacher').eq('status','active').order('full_name').limit(1);
       const hp=heads?.[0];
       if(hp){
-       const{data:hs}=await db.from('staff').select('id,first_name,middle_name,last_name').eq('profile_id',hp.id).maybeSingle();
        const{data:hSig}=await db.from('staff_signatures').select('signature').eq('profile_id',hp.id).eq('active',true).maybeSingle();
-       setHeadTeacher({name:hp.full_name||[hs?.first_name,hs?.middle_name,hs?.last_name].filter(Boolean).join(' '),signature:hSig?.signature||''});
+       setHeadTeacher({name:hp.full_name||'Head Teacher',signature:hSig?.signature||''});
       }
       if(remark?.exam_id&&remark?.class_id){const{data:examMarks}=await db.from('marks').select('student_id,marks,max_marks,achievement_level').eq('exam_id',remark.exam_id).eq('class_id',remark.class_id);const rows=(examMarks||[]).map((m:any)=>{const normal=!["X","Y"].includes(m.achievement_level)&&m.marks!=null;return{student_id:m.student_id,percent:normal?Number(m.marks)/Number(m.max_marks||100)*100:0,points:normal?(Number(m.marks)/Number(m.max_marks||100)>=.8?4:Number(m.marks)/Number(m.max_marks||100)>=.6?3:Number(m.marks)/Number(m.max_marks||100)>=.4?2:1):0,special:m.achievement_level==='X'||m.achievement_level==='Y'}});const totals=new Map<string,{sum:number;count:number;points:number;special:boolean}>();for(const r of rows){const t=totals.get(r.student_id)||{sum:0,count:0,points:0,special:false};if(!r.special){t.sum+=r.percent;t.count++;t.points+=r.points}else t.special=true;totals.set(r.student_id,t)}const ranked=[...totals.entries()].map(([student_id,t])=>({student_id,avg:t.count?t.sum/t.count:null,points:t.points,special:t.special})).filter(r=>r.avg!==null&&!r.special).sort((a,b)=>(b.avg||0)-(a.avg||0)||b.points-a.points);const rank=ranked.findIndex(r=>r.student_id===selected);setReportPosition(rank>=0?rank+1:null)}else setReportPosition(null)})()},[selected,students])
  const filtered=students.filter(s=>`${s.admission_number} ${s.first_name} ${s.last_name}`.toLowerCase().includes(search.toLowerCase()))
