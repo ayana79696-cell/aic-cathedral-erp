@@ -16,7 +16,7 @@ export default async function Page(){
  const [{data:students},{data:accounts},{data:payments},{data:budgetLines},{data:payroll}]=await Promise.all([
   s.from('students').select('id,admission_number,first_name,middle_name,last_name,class_id,stream_id').eq('status','active').order('last_name'),
   s.from('fee_accounts').select('amount_due,amount_paid,status,student_id,charge_type,charge_label'),
-  s.from('fee_payments').select('amount,payment_category'),
+  s.from('fee_payments').select('id,student_id,amount,payment_method,reference_no,paid_at,payment_category'),
   s.from('budget_lines').select('id,category,section,budget_amount,notes').order('section').order('category'),
   s.from('payroll_records').select('gross_pay,status')
  ])
@@ -45,7 +45,7 @@ export default async function Page(){
   <section id="payment-history"><PaymentHistory /></section>
   <section id="thermal-receipts"><OfficialThermalFeeReceipts /></section>
   <section id="statements"><StudentFeeStatements /></section>
-  <section id="fees-report"><SchoolFeesReport students={fs} accounts={accounts||[]} /></section>
+  <section id="fees-report"><SchoolFeesReport students={fs} accounts={accounts||[]} payments={payments||[]} /></section>
   <section id="cashbook"><Cashbook /></section>
   <section id="invoices"><Invoices /></section>
   <section id="balances"><FeeHoldManager students={fs} accounts={accounts||[]}/></section>
